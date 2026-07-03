@@ -9,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { Progress } from "@/components/ui/progress";
 import {
   Target, Plus, CheckCircle, Clock, Pause, ArrowLeft,
-  Trash2, Play, Award, ChevronDown, ChevronUp
+  Trash2, Play, Award, ChevronDown, ChevronUp, TrendingUp, Star
 } from "lucide-react";
 
 const CATEGORIES = ["housing","employment","health","legal","recovery","education","identity","financial","family","transportation","other"];
@@ -102,6 +103,45 @@ export default function Goals() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        {/* Progress Overview */}
+        {goalsList.length > 0 && (
+          <Card className="border-0 shadow-sm bg-gradient-to-r from-teal-50 to-green-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="w-4 h-4 text-teal-600" />
+                <span className="text-sm font-semibold text-gray-900">Your Progress</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-teal-600">{goalsList.length}</p>
+                  <p className="text-xs text-gray-500">Total Goals</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-orange-500">{active.length}</p>
+                  <p className="text-xs text-gray-500">Active</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{completed.length}</p>
+                  <p className="text-xs text-gray-500">Done</p>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Overall completion</span>
+                  <span className="font-medium">{goalsList.length > 0 ? Math.round((completed.length / goalsList.length) * 100) : 0}%</span>
+                </div>
+                <Progress value={goalsList.length > 0 ? (completed.length / goalsList.length) * 100 : 0} className="h-2" />
+              </div>
+              {completed.length > 0 && (
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-green-700 font-medium">
+                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                  {completed.length === 1 ? "1 goal completed — great work!" : `${completed.length} goals completed — you're making real progress!`}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {active.length === 0 && completed.length === 0 && (
           <div className="text-center py-16">
             <Target className="w-12 h-12 text-muted-foreground mx-auto mb-3" />

@@ -15,6 +15,7 @@ import CalendarPage from "./pages/Calendar";
 import Counselor from "./pages/Counselor";
 import Coach from "./pages/Coach";
 import CaseManagerPortal from "./pages/CaseManagerPortal";
+import ProviderPortal from "./pages/ProviderPortal";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/counselor" component={Counselor} />
       <Route path="/coach" component={Coach} />
       <Route path="/portal" component={CaseManagerPortal} />
+      <Route path="/provider-portal" component={ProviderPortal} />
       <Route path={"/profile"} component={Profile} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />

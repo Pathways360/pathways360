@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import {
   Heart, MapPin, Calendar, Target, MessageCircle,
   Sparkles, ChevronRight, CheckCircle, Clock, AlertCircle,
-  Plus, Star, Award, ArrowRight, BookOpen, Phone
+  Plus, Star, Award, ArrowRight, BookOpen, Phone, Briefcase, Shield, Bell, Mail
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
@@ -39,6 +39,15 @@ export default function Dashboard() {
 
   const { data: dashData, isLoading } = trpc.dashboard.getSummary.useQuery();
   const { data: coachMsg } = trpc.coach.getTodayMessage.useQuery();
+  const { data: providerMsgs } = trpc.providerMessages.getMyMessages.useQuery();
+  const markReadMutation = trpc.providerMessages.markRead.useMutation();
+  const utils = trpc.useUtils();
+
+  function handleMarkRead(id: number) {
+    markReadMutation.mutate({ messageId: id }, {
+      onSuccess: () => utils.providerMessages.getMyMessages.invalidate()
+    });
+  }
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -251,6 +260,60 @@ export default function Dashboard() {
                   />
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Provider Messages Inbox ────────────────────────────────────────────────── */}
+        {providerMsgs && providerMsgs.length > 0 && (
+          <Card className="animate-fade-in-up">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="font-display text-base flex items-center gap-2">
+                <Mail className="w-5 h-5 text-teal-600" />
+                Messages from Your Team
+                {providerMsgs.filter((m: any) => !m.read).length > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
+                    {providerMsgs.filter((m: any) => !m.read).length}
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {providerMsgs.slice(0, 5).map((msg: any) => (
+                <div key={msg.id} className={`flex items-start gap-3 p-3 rounded-xl transition-colors cursor-pointer ${!msg.read ? 'bg-teal-50 border border-teal-100' : 'bg-secondary/50'}`} onClick={() => !msg.read && handleMarkRead(msg.id)}>
+                  <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${!msg.read ? 'bg-teal-500' : 'bg-transparent'}`} />
+                  <div className="flex-1 min-w-0">
+                    {msg.subject && <p className="text-sm font-semibold text-foreground">{msg.subject}</p>}
+                    <p className="text-sm text-muted-foreground line-clamp-2">{msg.content}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                        msg.messageType === 'alert' ? 'bg-red-100 text-red-700' :
+                        msg.messageType === 'appointment' ? 'bg-blue-100 text-blue-700' :
+                        msg.messageType === 'task' ? 'bg-orange-100 text-orange-700' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>{msg.messageType}</span>
+                      <span className="text-xs text-muted-foreground">{new Date(msg.createdAt).toLocaleDateString()}</span>
+                      {!msg.read && <span className="text-xs text-teal-600 font-medium">Tap to mark read</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Provider Portal shortcut (for case managers / org admins) ─────── */}
+        {(user?.role === "case_manager" || user?.role === "org_admin") && (
+          <Card className="border-teal-200 bg-teal-50 animate-fade-in-up cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/provider-portal")}>
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center flex-shrink-0">
+                <Briefcase className="w-6 h-6 text-teal-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">Provider Portal</p>
+                <p className="text-sm text-gray-600">Manage your caseload, send messages, and track client progress.</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-teal-600 flex-shrink-0" />
             </CardContent>
           </Card>
         )}

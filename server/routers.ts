@@ -11,7 +11,7 @@ import {
   users, userProfiles, needsAssessments, coachSettings,
   goals, appointments, chatMessages, resources, organizations,
   caseManagerAssignments, dailyCoachMessages, milestones,
-  notificationPreferences
+  notificationPreferences, providerMessages
 } from "../drizzle/schema";
 import { eq, and, desc, gte, lte, or, like } from "drizzle-orm";
 
@@ -707,6 +707,57 @@ const notificationsRouter = router({
     }),
 });
 
+
+// ─── Provider Messages Router ─────────────────────────────────────────────────
+const providerMessagesRouter = router({
+  send: protectedProcedure
+    .input(z.object({
+      toClientId: z.number(),
+      subject: z.string().optional(),
+      content: z.string().min(1),
+      messageType: z.enum(["message", "task", "reminder", "appointment", "goal", "alert"]).default("message"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "case_manager" && ctx.user.role !== "org_admin" && ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only providers can send messages" });
+      }
+      const db = await requireDb();
+      await db.insert(providerMessages).values({
+        fromProviderId: ctx.user.id,
+        toClientId: input.toClientId,
+        organizationId: 1,
+        subject: input.subject,
+        content: input.content,
+        messageType: input.messageType,
+      });
+      return { success: true };
+    }),
+  getMyMessages: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    return db.select().from(providerMessages)
+      .where(eq(providerMessages.toClientId, ctx.user.id))
+      .orderBy(desc(providerMessages.createdAt)).limit(20);
+  }),
+  markRead: protectedProcedure
+    .input(z.object({ messageId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [msg] = await db.select().from(providerMessages).where(eq(providerMessages.id, input.messageId)).limit(1);
+      if (!msg || msg.toClientId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN" });
+      await db.update(providerMessages).set({ read: true, readAt: new Date() }).where(eq(providerMessages.id, input.messageId));
+      return { success: true };
+    }),
+  getSent: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "case_manager" && ctx.user.role !== "org_admin" && ctx.user.role !== "admin") {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    const db = await requireDb();
+    return db.select().from(providerMessages)
+      .where(eq(providerMessages.fromProviderId, ctx.user.id))
+      .orderBy(desc(providerMessages.createdAt)).limit(50);
+  }),
+});
+
 // ─── App Router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -722,6 +773,7 @@ export const appRouter = router({
   milestones: milestonesRouter,
   caseManager: caseManagerRouter,
   notifications: notificationsRouter,
+  providerMessages: providerMessagesRouter,
 });
 
 export type AppRouter = typeof appRouter;

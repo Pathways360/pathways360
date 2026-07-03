@@ -283,3 +283,137 @@ export const notificationPreferences = mysqlTable("notification_preferences", {
 
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreferences = typeof notificationPreferences.$inferInsert;
+
+// ─── Provider Roles ───────────────────────────────────────────────────────────
+export const providerRoles = mysqlTable("provider_roles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  organizationId: int("organizationId").notNull(),
+  role: mysqlEnum("role", [
+    "system_admin", "county_admin", "health_plan_admin",
+    "probation_supervisor", "probation_officer",
+    "behavioral_health_supervisor", "case_manager", "ecm_worker",
+    "social_worker", "treatment_counselor", "housing_navigator",
+    "peer_support_specialist", "read_only_auditor"
+  ]).notNull(),
+  permissions: json("permissions"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── Client Timelines ─────────────────────────────────────────────────────────
+export const clientTimelines = mysqlTable("client_timelines", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  organizationId: int("organizationId").notNull(),
+  createdByProviderId: int("createdByProviderId").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── Timeline Tasks ───────────────────────────────────────────────────────────
+export const timelineTasks = mysqlTable("timeline_tasks", {
+  id: int("id").autoincrement().primaryKey(),
+  timelineId: int("timelineId").notNull(),
+  clientId: int("clientId").notNull(),
+  assignedToProviderId: int("assignedToProviderId"),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  category: mysqlEnum("category", [
+    "housing", "employment", "health", "legal", "recovery",
+    "education", "identity", "financial", "family", "transportation",
+    "probation", "benefits", "other"
+  ]).default("other").notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "missed", "cancelled"]).default("pending").notNull(),
+  dueDate: timestamp("dueDate"),
+  completedAt: timestamp("completedAt"),
+  notes: text("notes"),
+  attachments: json("attachments"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── Provider Messages ────────────────────────────────────────────────────────
+export const providerMessages = mysqlTable("provider_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  fromProviderId: int("fromProviderId").notNull(),
+  toClientId: int("toClientId").notNull(),
+  organizationId: int("organizationId").notNull(),
+  subject: varchar("subject", { length: 200 }),
+  content: text("content").notNull(),
+  messageType: mysqlEnum("messageType", ["message", "task", "reminder", "appointment", "goal", "alert"]).default("message").notNull(),
+  scheduledFor: timestamp("scheduledFor"),
+  read: boolean("read").default(false).notNull(),
+  readAt: timestamp("readAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// ─── Progress Milestones ──────────────────────────────────────────────────────
+export const progressMilestones = mysqlTable("progress_milestones", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  milestoneKey: mysqlEnum("milestoneKey", [
+    "government_id_obtained", "benefits_approved", "housing_secured",
+    "treatment_completed", "recovery_milestone", "employment_obtained",
+    "income_established", "education_enrolled", "transportation_obtained",
+    "family_reunification"
+  ]).notNull(),
+  achieved: boolean("achieved").default(false).notNull(),
+  achievedAt: timestamp("achievedAt"),
+  notes: text("notes"),
+  verifiedByProviderId: int("verifiedByProviderId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── Organization Directory ───────────────────────────────────────────────────
+export const orgDirectory = mysqlTable("org_directory", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  // Location
+  county: varchar("county", { length: 100 }),
+  serviceArea: text("serviceArea"),
+  // Services
+  servicesOffered: text("servicesOffered"),
+  eligibilityRequirements: text("eligibilityRequirements"),
+  populationsServed: text("populationsServed"),
+  // Contact & Hours
+  hoursOfOperation: text("hoursOfOperation"),
+  afterHoursContact: varchar("afterHoursContact", { length: 100 }),
+  // Status
+  acceptingClients: boolean("acceptingClients").default(true).notNull(),
+  hasWaitlist: boolean("hasWaitlist").default(false).notNull(),
+  waitlistNotes: text("waitlistNotes"),
+  // Special notices
+  closureNotice: text("closureNotice"),
+  specialEvents: text("specialEvents"),
+  lastUpdatedByUserId: int("lastUpdatedByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── Organization License ─────────────────────────────────────────────────────
+export const orgLicenses = mysqlTable("org_licenses", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull().unique(),
+  licenseType: mysqlEnum("licenseType", ["per_user", "per_agency", "per_department", "countywide", "enterprise", "statewide"]).default("per_agency").notNull(),
+  maxUsers: int("maxUsers").default(5),
+  isActive: boolean("isActive").default(true).notNull(),
+  trialEndsAt: timestamp("trialEndsAt"),
+  licenseExpiresAt: timestamp("licenseExpiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProviderRole = typeof providerRoles.$inferSelect;
+export type ClientTimeline = typeof clientTimelines.$inferSelect;
+export type TimelineTask = typeof timelineTasks.$inferSelect;
+export type ProviderMessage = typeof providerMessages.$inferSelect;
+export type ProgressMilestone = typeof progressMilestones.$inferSelect;
+export type OrgDirectory = typeof orgDirectory.$inferSelect;
+export type OrgLicense = typeof orgLicenses.$inferSelect;

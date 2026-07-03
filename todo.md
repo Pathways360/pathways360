@@ -71,3 +71,22 @@
 - [x] Mount /api/scheduled/appointment-reminder in server/_core/index.ts
 - [x] Add reminder toggle UI in Calendar page with time selector (15min to 2 days before)
 - [x] Store reminder job UIDs in appointments table; cancel job on appointment delete
+
+## Phase 12: Provider Portal & Dynamic Resource Network (Phase 2 Expansion)
+- [x] Expand DB schema: organizations, org_members, provider_roles, client_timelines, timeline_tasks, provider_messages, progress_milestones, resource_categories (35+)
+- [x] Location-aware resource filtering by ZIP/city/county/state
+- [x] 35+ resource categories in resource navigator
+- [x] Organization Directory — self-service org listings with hours, phone, services, closures
+- [x] Downloadable Resource Guide (text export by location/category filter)
+- [x] Provider Portal with 13 role types and configurable permissions
+- [x] Client timeline with tasks, due dates, priority, status, assigned staff, notes, attachments
+- [x] Provider-to-client messaging (messages become tasks/reminders/appointments/goals/alerts on client dashboard)
+- [x] Case Management Dashboard per provider (upcoming/missed appointments, tasks, milestones, risk alerts)
+- [x] Progress tracking with 10 life milestones and visual indicators
+- [x] Organization reporting UI (admin-only reports tab in Provider Portal)
+- [x] HIPAA-aware consent and role-based data access controls
+- [x] Wire all new tRPC routes and run tests
+- [x] Fully enable backend Provider Portal with working login, client list, and role-based dashboard
+- [x] Build provider-to-client communication system (compose, send, message types: task/reminder/appointment/goal/alert)
+- [x] Build client inbox on dashboard showing messages from providers
+- [x] Provider team communication (internal notes, handoffs between team members)
