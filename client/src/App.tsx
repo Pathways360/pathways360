@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Assessment from "./pages/Assessment";
 import CoachSetup from "./pages/CoachSetup";
@@ -28,7 +29,8 @@ function Router() {
       <Route path="/counselor" component={Counselor} />
       <Route path="/coach" component={Coach} />
       <Route path="/portal" component={CaseManagerPortal} />
-      <Route path="/404" component={NotFound} />
+      <Route path={"/profile"} component={Profile} />
+      <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -10,7 +10,8 @@ import { invokeLLM } from "./_core/llm";
 import {
   users, userProfiles, needsAssessments, coachSettings,
   goals, appointments, chatMessages, resources, organizations,
-  caseManagerAssignments, dailyCoachMessages, milestones
+  caseManagerAssignments, dailyCoachMessages, milestones,
+  notificationPreferences
 } from "../drizzle/schema";
 import { eq, and, desc, gte, lte, or, like } from "drizzle-orm";
 
@@ -670,6 +671,42 @@ const caseManagerRouter = router({
     }),
 });
 
+// ─── Notifications Router ───────────────────────────────────────────────────
+const notificationsRouter = router({
+  get: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    const [prefs] = await db.select().from(notificationPreferences)
+      .where(eq(notificationPreferences.userId, ctx.user.id)).limit(1);
+    return prefs || null;
+  }),
+  upsert: protectedProcedure
+    .input(z.object({
+      appointmentReminders: z.boolean().optional(),
+      medicationReminders: z.boolean().optional(),
+      goalReminders: z.boolean().optional(),
+      dailyCoachMessage: z.boolean().optional(),
+      weeklyProgressSummary: z.boolean().optional(),
+      devotionals: z.boolean().optional(),
+      motivationalMessages: z.boolean().optional(),
+      crisisAlerts: z.boolean().optional(),
+      reminderLeadMinutes: z.number().optional(),
+      quietHoursStart: z.string().optional(),
+      quietHoursEnd: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [existing] = await db.select().from(notificationPreferences)
+        .where(eq(notificationPreferences.userId, ctx.user.id)).limit(1);
+      if (existing) {
+        await db.update(notificationPreferences).set(input)
+          .where(eq(notificationPreferences.userId, ctx.user.id));
+      } else {
+        await db.insert(notificationPreferences).values({ userId: ctx.user.id, ...input });
+      }
+      return { success: true };
+    }),
+});
+
 // ─── App Router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -684,6 +721,7 @@ export const appRouter = router({
   dashboard: dashboardRouter,
   milestones: milestonesRouter,
   caseManager: caseManagerRouter,
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

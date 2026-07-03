@@ -257,3 +257,29 @@ export const milestones = mysqlTable("milestones", {
   celebrationMessage: text("celebrationMessage"),
   achievedAt: timestamp("achievedAt").defaultNow().notNull(),
 });
+
+// ─── Notification Preferences ─────────────────────────────────────────────────
+export const notificationPreferences = mysqlTable("notification_preferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  // Reminder channels
+  appointmentReminders: boolean("appointmentReminders").default(true).notNull(),
+  medicationReminders: boolean("medicationReminders").default(true).notNull(),
+  goalReminders: boolean("goalReminders").default(true).notNull(),
+  // Coach & content
+  dailyCoachMessage: boolean("dailyCoachMessage").default(true).notNull(),
+  weeklyProgressSummary: boolean("weeklyProgressSummary").default(true).notNull(),
+  devotionals: boolean("devotionals").default(false).notNull(),
+  motivationalMessages: boolean("motivationalMessages").default(true).notNull(),
+  // Safety
+  crisisAlerts: boolean("crisisAlerts").default(true).notNull(),
+  // Timing
+  reminderLeadMinutes: int("reminderLeadMinutes").default(60).notNull(),
+  quietHoursStart: varchar("quietHoursStart", { length: 5 }).default("22:00"),
+  quietHoursEnd: varchar("quietHoursEnd", { length: 5 }).default("08:00"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreferences = typeof notificationPreferences.$inferInsert;

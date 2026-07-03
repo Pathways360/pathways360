@@ -22,6 +22,13 @@
       "when": 1783097516573,
       "tag": "0002_useful_mentallo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1783099189281,
+      "tag": "0003_chubby_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }
