@@ -158,6 +158,7 @@ export const appointments = mysqlTable("appointments", {
   reminderEnabled: boolean("reminderEnabled").default(true).notNull(),
   reminderMinutesBefore: int("reminderMinutesBefore").default(60),
   completed: boolean("completed").default(false).notNull(),
+  scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

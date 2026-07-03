@@ -77,10 +77,10 @@ export default function Dashboard() {
       <div className="container py-6 space-y-6">
         {/* ── Greeting ──────────────────────────────────────────────────────── */}
         <div className="animate-fade-in-up">
-          <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+          <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate max-w-full">
             {greeting()}, {firstName} 👋
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             {format(new Date(), "EEEE, MMMM d, yyyy")} — Let's keep moving forward.
           </p>
         </div>
@@ -97,7 +97,7 @@ export default function Dashboard() {
                   <p className="font-semibold text-white/90 text-sm mb-1">
                     {coachMsg.coachName || "Your Coach"} says:
                   </p>
-                  <p className="text-white leading-relaxed">{coachMsg.message}</p>
+                  <p className="text-white leading-relaxed text-sm sm:text-base">{coachMsg.message}</p>
                 </div>
                 <Button
                   variant="ghost"

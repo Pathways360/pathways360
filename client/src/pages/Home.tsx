@@ -81,18 +81,18 @@ export default function Home() {
             </div>
             <span className="font-display font-bold text-lg text-foreground">Pathways 360</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {isAuthenticated ? (
-              <Button onClick={() => navigate("/dashboard")} className="gradient-brand text-white border-0">
-                Go to Dashboard
+              <Button size="sm" onClick={() => navigate("/dashboard")} className="gradient-brand text-white border-0 text-xs sm:text-sm">
+                <span className="hidden sm:inline">Go to </span>Dashboard
               </Button>
             ) : (
               <>
-                <Button variant="ghost" onClick={() => window.location.href = getLoginUrl()}>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm" onClick={() => window.location.href = getLoginUrl()}>
                   Sign In
                 </Button>
-                <Button onClick={handleGetStarted} className="gradient-brand text-white border-0">
-                  Get Started Free
+                <Button size="sm" onClick={handleGetStarted} className="gradient-brand text-white border-0 text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Get Started </span>Free
                 </Button>
               </>
             )}
@@ -106,17 +106,17 @@ export default function Home() {
           <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-white blur-3xl" />
           <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-brand-amber blur-3xl" />
         </div>
-        <div className="container relative py-24 md:py-32">
+        <div className="container relative py-16 md:py-32">
           <div className="max-w-3xl animate-fade-in-up">
             <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4 text-brand-amber" />
               Your Personal Life Restoration Platform
             </div>
-            <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight mb-6">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-6xl font-bold leading-tight mb-6">
               You don't have to<br />
               <span className="text-brand-amber">walk alone.</span>
             </h1>
-            <p className="text-lg md:text-xl text-white/80 mb-8 max-w-2xl leading-relaxed">
+            <p className="text-base md:text-xl text-white/80 mb-8 max-w-2xl leading-relaxed">
               Pathways 360 is your personal AI life coach, resource navigator, goal planner,
               and daily guide — built for anyone who needs a little help finding their way forward.
             </p>
@@ -124,7 +124,7 @@ export default function Home() {
               <Button
                 size="lg"
                 onClick={handleGetStarted}
-                className="gradient-warm text-foreground font-semibold border-0 text-base px-8 h-14"
+                className="gradient-warm text-foreground font-semibold border-0 text-sm sm:text-base px-6 sm:px-8 h-12 sm:h-14"
               >
                 Start Your Journey Free
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -133,7 +133,7 @@ export default function Home() {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/resources")}
-                className="bg-white/10 border-white/30 text-white hover:bg-white/20 text-base px-8 h-14"
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20 text-sm sm:text-base px-6 sm:px-8 h-12 sm:h-14"
               >
                 <MapPin className="w-5 h-5 mr-2" />
                 Find Resources Near Me
@@ -146,7 +146,7 @@ export default function Home() {
       {/* ── Trust bar ───────────────────────────────────────────────────────── */}
       <section className="bg-brand-navy text-white py-6">
         <div className="container">
-          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/70">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm text-white/70">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-brand-teal-light" />
               100% Confidential

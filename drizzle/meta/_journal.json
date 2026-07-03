@@ -15,6 +15,13 @@
       "when": 1783096200125,
       "tag": "0001_lethal_iron_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1783097516573,
+      "tag": "0002_useful_mentallo",
+      "breakpoints": true
     }
   ]
 }

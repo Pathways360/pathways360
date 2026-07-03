@@ -322,20 +322,36 @@ export default function Assessment() {
       </div>
 
       {/* Steps indicator */}
-      <div className="bg-white border-b border-border overflow-x-auto">
-        <div className="flex gap-1 px-4 py-3 max-w-lg mx-auto">
-          {STEPS.map((s, i) => (
+      <div className="bg-white border-b border-border">
+        <div className="max-w-lg mx-auto px-4 py-3">
+          {/* Mobile: progress bar + step label */}
+          <div className="flex items-center justify-between mb-2 sm:hidden">
+            <span className="text-xs font-medium text-brand-teal">
+              Step {step + 1} of {STEPS.length}
+            </span>
+            <span className="text-xs text-muted-foreground">{STEPS[step].title}</span>
+          </div>
+          <div className="sm:hidden h-1.5 bg-secondary rounded-full overflow-hidden">
             <div
-              key={s.id}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                i === step ? "bg-brand-teal/10 text-brand-teal" :
-                i < step ? "text-brand-green" : "text-muted-foreground"
-              }`}
-            >
-              {i < step ? <CheckCircle className="w-3 h-3" /> : s.icon}
-              <span className="hidden sm:inline">{s.title}</span>
-            </div>
-          ))}
+              className="h-full bg-brand-teal rounded-full transition-all duration-300"
+              style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+            />
+          </div>
+          {/* Desktop: step chips */}
+          <div className="hidden sm:flex gap-1 overflow-x-auto">
+            {STEPS.map((s, i) => (
+              <div
+                key={s.id}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                  i === step ? "bg-brand-teal/10 text-brand-teal" :
+                  i < step ? "text-brand-green" : "text-muted-foreground"
+                }`}
+              >
+                {i < step ? <CheckCircle className="w-3 h-3" /> : s.icon}
+                <span>{s.title}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

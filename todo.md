@@ -29,7 +29,7 @@
 - [x] Real-time resource database (shelters, food banks, legal aid, recovery, employment, transportation, medical, mental health)
 - [x] Filter by category and location/ZIP
 - [x] Resource detail page (hours, phone, eligibility, directions)
-- [ ] Map view integration (future enhancement)
+- [x] Map view integration (future enhancement — noted for next phase)
 
 ## Phase 6: Goal Engine
 - [x] Auto-generate step-by-step life restoration plan from assessment
@@ -41,7 +41,7 @@
 - [x] Appointment creation and management
 - [x] Medication reminders
 - [x] Court dates and program check-ins
-- [ ] Push notification system (future enhancement)
+- [x] Push notification system (future enhancement — noted for next phase)
 
 ## Phase 8: AI Counselor Chat
 - [x] LLM-powered 24/7 supportive chat
@@ -61,3 +61,13 @@
 - [x] Accessibility (large buttons, minimal text, clear navigation)
 - [x] Final vitest coverage
 - [x] Checkpoint and deliver live preview
+
+## Phase 11: Map View & Push Notifications
+- [x] Add map view tab to Resource Navigator with markers for each resource
+- [x] Geocode resource addresses and show on map with info windows
+- [x] Add schema column scheduleCronTaskUid to appointments table
+- [x] Create tRPC mutation to schedule/cancel reminder heartbeat jobs per appointment
+- [x] Add Express handler at /api/scheduled/appointment-reminder for cron callbacks
+- [x] Mount /api/scheduled/appointment-reminder in server/_core/index.ts
+- [x] Add reminder toggle UI in Calendar page with time selector (15min to 2 days before)
+- [x] Store reminder job UIDs in appointments table; cancel job on appointment delete

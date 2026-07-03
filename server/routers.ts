@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { createHeartbeatJob, deleteHeartbeatJob } from "./_core/heartbeat";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -373,6 +374,19 @@ const goalsRouter = router({
 });
 
 // ─── Appointments Router ──────────────────────────────────────────────────────
+
+/** Build a 6-field UTC cron from a JS Date (fires once at that exact minute). */
+function dateToCron(date: Date): string {
+  return `0 ${date.getUTCMinutes()} ${date.getUTCHours()} ${date.getUTCDate()} ${date.getUTCMonth() + 1} *`;
+}
+
+/** Extract the raw session token from the request cookie (needed by heartbeat). */
+function getSessionToken(ctx: { req: { headers: { cookie?: string } } }): string {
+  const raw = ctx.req.headers.cookie || "";
+  const match = raw.match(/manus_session=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
 const appointmentsRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     const db = await requireDb();
@@ -390,17 +404,50 @@ const appointmentsRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
+      const apptDate = new Date(input.appointmentDate);
+      const reminderEnabled = input.reminderEnabled ?? true;
+      const minutesBefore = input.reminderMinutesBefore ?? 60;
+
       const result = await db.insert(appointments).values({
         userId: ctx.user.id,
         title: input.title,
         description: input.description,
         type: input.type,
-        appointmentDate: new Date(input.appointmentDate),
+        appointmentDate: apptDate,
         location: input.location,
-        reminderEnabled: input.reminderEnabled ?? true,
-        reminderMinutesBefore: input.reminderMinutesBefore ?? 60,
+        reminderEnabled,
+        reminderMinutesBefore: minutesBefore,
       });
-      return { id: Number(result[0].insertId) };
+      const apptId = Number(result[0].insertId);
+
+      // Schedule a heartbeat reminder if enabled and appointment is in the future
+      if (reminderEnabled) {
+        const reminderTime = new Date(apptDate.getTime() - minutesBefore * 60 * 1000);
+        if (reminderTime > new Date()) {
+          try {
+            const sessionToken = getSessionToken(ctx);
+            const { taskUid } = await createHeartbeatJob(
+              {
+                name: `appt-reminder-${apptId}`,
+                cron: dateToCron(reminderTime),
+                path: "/api/scheduled/appointment-reminder",
+                method: "POST",
+                payload: { appointmentId: apptId },
+                description: `Reminder for appointment: ${input.title}`,
+              },
+              sessionToken
+            );
+            await db.update(appointments)
+              .set({ scheduleCronTaskUid: taskUid })
+              .where(eq(appointments.id, apptId));
+          } catch (err) {
+            // Non-fatal: appointment is saved, reminder scheduling failed
+            console.warn("[Reminder] Failed to schedule heartbeat job:", err);
+          }
+        }
+      }
+
+      return { id: apptId };
     }),
   complete: protectedProcedure
     .input(z.object({ id: z.number() }))
@@ -413,6 +460,18 @@ const appointmentsRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
+      // Cancel the heartbeat job if one exists
+      const [appt] = await db.select().from(appointments)
+        .where(and(eq(appointments.id, input.id), eq(appointments.userId, ctx.user.id)))
+        .limit(1);
+      if (appt?.scheduleCronTaskUid) {
+        try {
+          const sessionToken = getSessionToken(ctx);
+          await deleteHeartbeatJob(appt.scheduleCronTaskUid, sessionToken);
+        } catch (err) {
+          console.warn("[Reminder] Failed to delete heartbeat job:", err);
+        }
+      }
       await db.delete(appointments).where(and(eq(appointments.id, input.id), eq(appointments.userId, ctx.user.id)));
       return { success: true };
     }),
