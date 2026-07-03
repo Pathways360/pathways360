@@ -90,3 +90,33 @@
 - [x] Build provider-to-client communication system (compose, send, message types: task/reminder/appointment/goal/alert)
 - [x] Build client inbox on dashboard showing messages from providers
 - [x] Provider team communication (internal notes, handoffs between team members)
+
+## Phase 13: Multi-Agency ROI Collaboration & County Resource Directory
+
+### Multi-Agency Shared Client Record
+- [x] DB schema: clientAgencyEnrollments, sharedProgressNotes, clientGapFlags, resourceRecommendations, countyResources, progressMilestones
+- [x] tRPC multiAgency.getSharedClientRecord — unified profile visible to all enrolled agencies
+- [x] tRPC multiAgency.addNote — cross-agency notes with visibility control
+- [x] tRPC multiAgency.flagGap / resolveGap — flag and resolve client care gaps
+- [x] tRPC multiAgency.enrollClient / getClientEnrollments — multi-agency enrollment
+
+### Provider Shared Client Profile View
+- [x] SharedClientProfile page: all-agency milestone grid, cross-agency notes feed, gap flags panel, enrolled agencies list
+- [x] Gap flags displayed as colored severity badges with one-click resolve
+- [x] All-agency notes feed with type, visibility, timestamp
+- [x] Milestone grid showing 10 life milestones
+- [x] Wired into ProviderPortal client detail view
+
+### Resource Recommendation Engine
+- [x] tRPC recommendations.getForClient — reads assessment + gap flags → scored resource matches
+- [x] tRPC recommendations.sendReminder — sends resource to client inbox as a provider message reminder
+- [x] Provider Portal: Recommended Resources panel with one-click Send to Client
+- [x] Client Dashboard: resource reminders appear in inbox
+
+### 6-County Northern California Resource Directory
+- [x] 85 real resources seeded: Butte, Shasta, Trinity, Tehama, Humboldt, Siskiyou
+- [x] Categories: Emergency Shelter, STPH, Recovery Housing, MAT, AA/NA, ECM, Mental Health, Employment, Education, Food Bank, Legal Aid, Reentry, Veterans, DV, Benefits, Peer Support
+- [x] CountyDirectory page with county/category/keyword filters, ECM/Medi-Cal/Free toggles
+- [x] By-County and By-Category views
+- [x] Download Guide button (formatted text export)
+- [x] County Directory linked from Dashboard quick actions

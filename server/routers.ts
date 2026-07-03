@@ -11,7 +11,9 @@ import {
   users, userProfiles, needsAssessments, coachSettings,
   goals, appointments, chatMessages, resources, organizations,
   caseManagerAssignments, dailyCoachMessages, milestones,
-  notificationPreferences, providerMessages
+  notificationPreferences, providerMessages,
+  clientAgencyEnrollments, sharedProgressNotes, clientGapFlags,
+  resourceRecommendations, countyResources, progressMilestones
 } from "../drizzle/schema";
 import { eq, and, desc, gte, lte, or, like } from "drizzle-orm";
 
@@ -758,6 +760,284 @@ const providerMessagesRouter = router({
   }),
 });
 
+// ─── Multi-Agency Collaboration Router ──────────────────────────────────────
+const multiAgencyRouter = router({
+  // Enroll a client in an agency (requires provider role)
+  enrollClient: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      organizationId: z.number(),
+      agencyRole: z.enum(["primary_ecm","behavioral_health","housing","probation","employment","substance_use","peer_support","legal","other"]),
+      consentGiven: z.boolean().default(false),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      // Check if already enrolled
+      const [existing] = await db.select().from(clientAgencyEnrollments)
+        .where(and(eq(clientAgencyEnrollments.clientId, input.clientId), eq(clientAgencyEnrollments.organizationId, input.organizationId))).limit(1);
+      if (existing) {
+        await db.update(clientAgencyEnrollments).set({ agencyRole: input.agencyRole, consentGiven: input.consentGiven, isActive: true, consentDate: input.consentGiven ? new Date() : undefined })
+          .where(eq(clientAgencyEnrollments.id, existing.id));
+      } else {
+        await db.insert(clientAgencyEnrollments).values({ clientId: input.clientId, organizationId: input.organizationId, enrolledByProviderId: ctx.user.id, agencyRole: input.agencyRole, consentGiven: input.consentGiven, consentDate: input.consentGiven ? new Date() : undefined });
+      }
+      return { success: true };
+    }),
+
+  // Get all agencies enrolled on a client
+  getClientEnrollments: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      return db.select().from(clientAgencyEnrollments)
+        .where(and(eq(clientAgencyEnrollments.clientId, input.clientId), eq(clientAgencyEnrollments.isActive, true)));
+    }),
+
+  // Get the full shared client record (profile + goals + milestones + gap flags + notes)
+  getSharedClientRecord: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, input.clientId)).limit(1);
+      const [user] = await db.select().from(users).where(eq(users.id, input.clientId)).limit(1);
+      const [assessment] = await db.select().from(needsAssessments).where(eq(needsAssessments.userId, input.clientId)).limit(1);
+      const clientGoals = await db.select().from(goals).where(eq(goals.userId, input.clientId)).orderBy(desc(goals.createdAt));
+      const clientMilestones = await db.select().from(progressMilestones).where(eq(progressMilestones.clientId, input.clientId));
+      const gapFlags = await db.select().from(clientGapFlags)
+        .where(and(eq(clientGapFlags.clientId, input.clientId), eq(clientGapFlags.resolved, false)))
+        .orderBy(desc(clientGapFlags.createdAt));
+      const notes = await db.select().from(sharedProgressNotes)
+        .where(eq(sharedProgressNotes.clientId, input.clientId))
+        .orderBy(desc(sharedProgressNotes.createdAt)).limit(50);
+      const enrollments = await db.select().from(clientAgencyEnrollments)
+        .where(and(eq(clientAgencyEnrollments.clientId, input.clientId), eq(clientAgencyEnrollments.isActive, true)));
+      return { user, profile, assessment, goals: clientGoals, milestones: clientMilestones, gapFlags, notes, enrollments };
+    }),
+
+  // Post a cross-agency note
+  addNote: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      noteType: z.enum(["progress","concern","milestone","handoff","referral","crisis","housing_update","employment_update","recovery_update","legal_update","medical_update","general"]),
+      content: z.string().min(1),
+      visibility: z.enum(["all_agencies","own_agency"]).default("all_agencies"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      await db.insert(sharedProgressNotes).values({
+        clientId: input.clientId,
+        authorProviderId: ctx.user.id,
+        authorOrganizationId: 1,
+        noteType: input.noteType,
+        content: input.content,
+        visibility: input.visibility,
+      });
+      return { success: true };
+    }),
+
+  // Flag a client gap
+  flagGap: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      gapCategory: z.enum(["no_housing_plan","chronically_homeless","no_mental_health_provider","no_substance_use_treatment","no_government_id","no_income","no_health_insurance","no_employment_plan","no_ecm_provider","probation_compliance_risk","no_peer_support","no_transportation","no_legal_representation","no_education_plan","family_reunification_needed","medication_not_managed","crisis_risk","other"]),
+      severity: z.enum(["low","medium","high","critical"]).default("medium"),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      await db.insert(clientGapFlags).values({ clientId: input.clientId, flaggedByProviderId: ctx.user.id, gapCategory: input.gapCategory, severity: input.severity, notes: input.notes });
+      return { success: true };
+    }),
+
+  // Resolve a gap flag
+  resolveGap: protectedProcedure
+    .input(z.object({ flagId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      await db.update(clientGapFlags).set({ resolved: true, resolvedAt: new Date(), resolvedByProviderId: ctx.user.id }).where(eq(clientGapFlags.id, input.flagId));
+      return { success: true };
+    }),
+});
+
+// ─── Resource Recommendation Engine Router ────────────────────────────────────
+const recommendationsRouter = router({
+  // Analyze a client's profile and return resource recommendations based on gap flags
+  getForClient: protectedProcedure
+    .input(z.object({ clientId: z.number(), county: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      const [assessment] = await db.select().from(needsAssessments).where(eq(needsAssessments.userId, input.clientId)).limit(1);
+      const gapFlags = await db.select().from(clientGapFlags)
+        .where(and(eq(clientGapFlags.clientId, input.clientId), eq(clientGapFlags.resolved, false)));
+      // Build category filter from gaps + assessment
+      // Note: assessment fields store human-readable phrases from the intake form
+      const neededCategories: string[] = [];
+      if (assessment) {
+        // Housing: matches "Outdoors or in a vehicle", "Emergency shelter", "Transitional housing", "Couch surfing", "Unstable housing"
+        const housingLower = (assessment.housingStatus || "").toLowerCase();
+        if (housingLower.includes("outdoor") || housingLower.includes("vehicle") || housingLower.includes("shelter") ||
+            housingLower.includes("transitional") || housingLower.includes("couch") || housingLower.includes("unstable") ||
+            housingLower.includes("homeless") || housingLower.includes("unhoused")) {
+          neededCategories.push("Emergency Shelter", "Housing Programs", "Transitional Housing", "STPH");
+        }
+        // Recovery: inRecovery boolean or substanceUseHistory text
+        if (assessment.inRecovery || (assessment.substanceUseHistory && assessment.substanceUseHistory.toLowerCase() !== "no" && assessment.substanceUseHistory.toLowerCase() !== "none")) {
+          neededCategories.push("Recovery Housing", "Substance Use Treatment", "AA/NA");
+        }
+        // Mental health: anything other than "No issues" / "Stable" / empty
+        const mhLower = (assessment.mentalHealthStatus || "").toLowerCase();
+        if (mhLower && !mhLower.includes("no issue") && !mhLower.includes("stable") && !mhLower.includes("none")) {
+          neededCategories.push("Mental Health", "Counseling");
+        }
+        // ID / benefits
+        if (!assessment.hasGovernmentId) neededCategories.push("Benefits");
+        if (!assessment.hasHealthInsurance) neededCategories.push("Medical");
+        // Employment: "Not currently working", "Unemployed", "Looking for work"
+        const empLower = (assessment.employmentStatus || "").toLowerCase();
+        if (empLower.includes("not") || empLower.includes("unemployed") || empLower.includes("looking") || empLower.includes("no job")) {
+          neededCategories.push("Employment");
+        }
+        if (assessment.onProbationOrParole) neededCategories.push("Reentry", "Legal Aid");
+        if (assessment.isVeteran) neededCategories.push("Veterans");
+        if (assessment.domesticViolenceHistory) neededCategories.push("Domestic Violence");
+        if (!assessment.hasCaseWorker) neededCategories.push("ECM", "Case Management");
+        // Food / basic needs — always include if housing is unstable
+        if (housingLower.includes("outdoor") || housingLower.includes("vehicle") || housingLower.includes("shelter")) {
+          neededCategories.push("Food Bank");
+        }
+      }
+      for (const flag of gapFlags) {
+        if (flag.gapCategory === "chronically_homeless") neededCategories.push("Emergency Shelter", "Permanent Supportive Housing", "STPH");
+        if (flag.gapCategory === "no_mental_health_provider") neededCategories.push("Mental Health", "Behavioral Health");
+        if (flag.gapCategory === "no_substance_use_treatment") neededCategories.push("Substance Use Treatment", "Recovery Housing", "MAT");
+        if (flag.gapCategory === "no_ecm_provider") neededCategories.push("ECM", "Enhanced Care Management");
+        if (flag.gapCategory === "no_peer_support") neededCategories.push("Peer Support");
+        if (flag.gapCategory === "no_employment_plan") neededCategories.push("Employment", "Job Training");
+        if (flag.gapCategory === "probation_compliance_risk") neededCategories.push("Reentry", "Legal Aid");
+      }
+      // Fetch matching county resources
+      const allResources = await db.select().from(countyResources)
+        .where(and(
+          eq(countyResources.isActive, true),
+          input.county ? eq(countyResources.county, input.county as any) : undefined
+        ))
+        .orderBy(countyResources.name).limit(200);
+      // Score and filter
+      const scored = allResources.map(r => {
+        const score = neededCategories.filter(c => r.category.toLowerCase().includes(c.toLowerCase()) || (r.subCategory || "").toLowerCase().includes(c.toLowerCase())).length;
+        return { ...r, score };
+      }).filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 15);
+      return { recommendations: scored, gapFlags, neededCategories: Array.from(new Set(neededCategories)) };
+    }),
+
+  // Send a resource as a reminder to the client's inbox
+  sendReminder: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      resourceName: z.string(),
+      resourceCategory: z.string(),
+      resourcePhone: z.string().optional(),
+      resourceAddress: z.string().optional(),
+      resourceWebsite: z.string().optional(),
+      resourceCounty: z.string().optional(),
+      reason: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      // Save recommendation record
+      await db.insert(resourceRecommendations).values({
+        clientId: input.clientId,
+        recommendedByProviderId: ctx.user.id,
+        resourceName: input.resourceName,
+        resourceCategory: input.resourceCategory,
+        resourcePhone: input.resourcePhone,
+        resourceAddress: input.resourceAddress,
+        resourceWebsite: input.resourceWebsite,
+        resourceCounty: input.resourceCounty,
+        reason: input.reason,
+        sentToClientInbox: true,
+        status: "sent",
+      });
+      // Also send as a provider message to client inbox
+      await db.insert(providerMessages).values({
+        fromProviderId: ctx.user.id,
+        toClientId: input.clientId,
+        organizationId: 1,
+        subject: `Resource Recommendation: ${input.resourceName}`,
+        content: `Your care team recommends this resource for you:\n\n**${input.resourceName}** (${input.resourceCategory})\n${input.resourceAddress ? `📍 ${input.resourceAddress}` : ""}\n${input.resourcePhone ? `📞 ${input.resourcePhone}` : ""}\n${input.resourceWebsite ? `🌐 ${input.resourceWebsite}` : ""}\n\n${input.reason ? `Why this matters: ${input.reason}` : ""}`,
+        messageType: "reminder",
+      });
+      return { success: true };
+    }),
+
+  // Get recommendations sent to a client (client-side inbox view)
+  getMyRecommendations: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    return db.select().from(resourceRecommendations)
+      .where(eq(resourceRecommendations.clientId, ctx.user.id))
+      .orderBy(desc(resourceRecommendations.createdAt)).limit(20);
+  }),
+});
+
+// ─── County Resources Router ──────────────────────────────────────────────────
+const countyResourcesRouter = router({
+  list: publicProcedure
+    .input(z.object({
+      county: z.string().optional(),
+      category: z.string().optional(),
+      search: z.string().optional(),
+      ecmEligible: z.boolean().optional(),
+      mediCalAccepted: z.boolean().optional(),
+      freeService: z.boolean().optional(),
+    }))
+    .query(async ({ input }) => {
+      const db = await requireDb();
+      let query = db.select().from(countyResources).where(eq(countyResources.isActive, true));
+      const results = await db.select().from(countyResources)
+        .where(and(
+          eq(countyResources.isActive, true),
+          input.county ? eq(countyResources.county, input.county as any) : undefined,
+          input.ecmEligible ? eq(countyResources.ecmEligible, true) : undefined,
+          input.mediCalAccepted ? eq(countyResources.mediCalAccepted, true) : undefined,
+          input.freeService ? eq(countyResources.freeService, true) : undefined,
+        ))
+        .orderBy(countyResources.county, countyResources.category, countyResources.name)
+        .limit(500);
+      if (input.search) {
+        const s = input.search.toLowerCase();
+        return results.filter(r => r.name.toLowerCase().includes(s) || (r.description || "").toLowerCase().includes(s) || r.category.toLowerCase().includes(s) || r.city?.toLowerCase().includes(s));
+      }
+      if (input.category) {
+        const c = input.category.toLowerCase();
+        return results.filter(r => r.category.toLowerCase().includes(c) || (r.subCategory || "").toLowerCase().includes(c));
+      }
+      return results;
+    }),
+
+  getByCounty: publicProcedure
+    .input(z.object({ county: z.enum(["butte","shasta","trinity","tehama","humboldt","siskiyou","other"]) }))
+    .query(async ({ input }) => {
+      const db = await requireDb();
+      return db.select().from(countyResources)
+        .where(and(eq(countyResources.county, input.county), eq(countyResources.isActive, true)))
+        .orderBy(countyResources.category, countyResources.name);
+    }),
+
+  getCategories: publicProcedure.query(async () => {
+    const db = await requireDb();
+    const all = await db.select({ category: countyResources.category }).from(countyResources).where(eq(countyResources.isActive, true));
+    return Array.from(new Set(all.map(r => r.category))).sort();
+  }),
+});
+
 // ─── App Router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -774,6 +1054,9 @@ export const appRouter = router({
   caseManager: caseManagerRouter,
   notifications: notificationsRouter,
   providerMessages: providerMessagesRouter,
+  multiAgency: multiAgencyRouter,
+  recommendations: recommendationsRouter,
+  countyResources: countyResourcesRouter,
 });
 
 export type AppRouter = typeof appRouter;

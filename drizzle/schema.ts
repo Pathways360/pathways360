@@ -410,6 +410,131 @@ export const orgLicenses = mysqlTable("org_licenses", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+// ─── Multi-Agency Client Enrollments ─────────────────────────────────────────
+// Tracks which agencies/providers are authorized to view a client's shared record
+export const clientAgencyEnrollments = mysqlTable("client_agency_enrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  organizationId: int("organizationId").notNull(),
+  enrolledByProviderId: int("enrolledByProviderId").notNull(),
+  // Role of this agency in the client's care
+  agencyRole: mysqlEnum("agencyRole", [
+    "primary_ecm", "behavioral_health", "housing", "probation",
+    "employment", "substance_use", "peer_support", "legal", "other"
+  ]).default("other").notNull(),
+  // Client consent to share data with this agency
+  consentGiven: boolean("consentGiven").default(false).notNull(),
+  consentDate: timestamp("consentDate"),
+  consentExpiresAt: timestamp("consentExpiresAt"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── Cross-Agency Shared Progress Notes ───────────────────────────────────────
+// Any enrolled provider can post notes visible to all agencies on that client
+export const sharedProgressNotes = mysqlTable("shared_progress_notes", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  authorProviderId: int("authorProviderId").notNull(),
+  authorOrganizationId: int("authorOrganizationId").notNull(),
+  noteType: mysqlEnum("noteType", [
+    "progress", "concern", "milestone", "handoff", "referral",
+    "crisis", "housing_update", "employment_update", "recovery_update",
+    "legal_update", "medical_update", "general"
+  ]).default("general").notNull(),
+  content: text("content").notNull(),
+  // Visibility: all_agencies = visible to all enrolled agencies; own_agency = only author's org
+  visibility: mysqlEnum("visibility", ["all_agencies", "own_agency"]).default("all_agencies").notNull(),
+  isPinned: boolean("isPinned").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── Client Gap Flags ─────────────────────────────────────────────────────────
+// Detected unmet needs / gaps in a client's care — drives resource recommendations
+export const clientGapFlags = mysqlTable("client_gap_flags", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  flaggedByProviderId: int("flaggedByProviderId"),
+  gapCategory: mysqlEnum("gapCategory", [
+    "no_housing_plan", "chronically_homeless", "no_mental_health_provider",
+    "no_substance_use_treatment", "no_government_id", "no_income",
+    "no_health_insurance", "no_employment_plan", "no_ecm_provider",
+    "probation_compliance_risk", "no_peer_support", "no_transportation",
+    "no_legal_representation", "no_education_plan", "family_reunification_needed",
+    "medication_not_managed", "crisis_risk", "other"
+  ]).notNull(),
+  severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).default("medium").notNull(),
+  notes: text("notes"),
+  resolved: boolean("resolved").default(false).notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+  resolvedByProviderId: int("resolvedByProviderId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── Resource Recommendations ─────────────────────────────────────────────────
+// Tracks resources recommended to a client by a provider or the system
+export const resourceRecommendations = mysqlTable("resource_recommendations", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  recommendedByProviderId: int("recommendedByProviderId"),
+  resourceName: varchar("resourceName", { length: 200 }).notNull(),
+  resourceCategory: varchar("resourceCategory", { length: 100 }).notNull(),
+  resourcePhone: varchar("resourcePhone", { length: 30 }),
+  resourceAddress: text("resourceAddress"),
+  resourceWebsite: text("resourceWebsite"),
+  resourceCounty: varchar("resourceCounty", { length: 100 }),
+  reason: text("reason"),  // Why this was recommended (gap flag that triggered it)
+  sentToClientInbox: boolean("sentToClientInbox").default(false).notNull(),
+  clientViewed: boolean("clientViewed").default(false).notNull(),
+  clientViewedAt: timestamp("clientViewedAt"),
+  status: mysqlEnum("status", ["pending", "sent", "viewed", "acted_on", "dismissed"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ─── County Resources (Real Directory) ────────────────────────────────────────
+// Stores real verified resources for Butte, Shasta, Trinity, Tehama, Humboldt, Siskiyou
+export const countyResources = mysqlTable("county_resources", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  county: mysqlEnum("county", [
+    "butte", "shasta", "trinity", "tehama", "humboldt", "siskiyou", "other"
+  ]).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  subCategory: varchar("subCategory", { length: 100 }),
+  description: text("description"),
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 10 }).default("CA"),
+  zipCode: varchar("zipCode", { length: 10 }),
+  phone: varchar("phone", { length: 30 }),
+  altPhone: varchar("altPhone", { length: 30 }),
+  website: text("website"),
+  email: varchar("email", { length: 320 }),
+  hours: text("hours"),
+  eligibility: text("eligibility"),
+  populationsServed: text("populationsServed"),
+  walkInsWelcome: boolean("walkInsWelcome").default(true),
+  appointmentRequired: boolean("appointmentRequired").default(false),
+  acceptingClients: boolean("acceptingClients").default(true).notNull(),
+  hasWaitlist: boolean("hasWaitlist").default(false).notNull(),
+  // Flags for recommendation engine
+  ecmEligible: boolean("ecmEligible").default(false).notNull(),
+  medicaidAccepted: boolean("medicaidAccepted").default(false).notNull(),
+  mediCalAccepted: boolean("mediCalAccepted").default(false).notNull(),
+  slidingScale: boolean("slidingScale").default(false).notNull(),
+  freeService: boolean("freeService").default(false).notNull(),
+  latitude: varchar("latitude", { length: 20 }),
+  longitude: varchar("longitude", { length: 20 }),
+  isVerified: boolean("isVerified").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export type ProviderRole = typeof providerRoles.$inferSelect;
 export type ClientTimeline = typeof clientTimelines.$inferSelect;
 export type TimelineTask = typeof timelineTasks.$inferSelect;
@@ -417,3 +542,8 @@ export type ProviderMessage = typeof providerMessages.$inferSelect;
 export type ProgressMilestone = typeof progressMilestones.$inferSelect;
 export type OrgDirectory = typeof orgDirectory.$inferSelect;
 export type OrgLicense = typeof orgLicenses.$inferSelect;
+export type ClientAgencyEnrollment = typeof clientAgencyEnrollments.$inferSelect;
+export type SharedProgressNote = typeof sharedProgressNotes.$inferSelect;
+export type ClientGapFlag = typeof clientGapFlags.$inferSelect;
+export type ResourceRecommendation = typeof resourceRecommendations.$inferSelect;
+export type CountyResource = typeof countyResources.$inferSelect;

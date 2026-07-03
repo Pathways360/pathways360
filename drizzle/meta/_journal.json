@@ -36,6 +36,13 @@
       "when": 1783117843818,
       "tag": "0004_small_lady_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1783121684886,
+      "tag": "0005_dazzling_black_bolt",
+      "breakpoints": true
     }
   ]
 }

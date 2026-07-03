@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SharedClientProfile from "./SharedClientProfile";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -361,6 +362,8 @@ export default function ProviderPortal() {
             <button onClick={() => setTab("clients")} className="flex items-center gap-1 text-sm text-teal-600 font-medium">
               <ArrowLeft className="w-4 h-4" />Back to clients
             </button>
+            {/* Shared Client Record — live multi-agency data if client is a real user */}
+            <SharedClientProfile clientId={selectedClient.id} />
             {/* Client header */}
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4">
