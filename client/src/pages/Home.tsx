@@ -76,7 +76,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-border">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
-            <img src="/manus-storage/ChatGPTImageJul4,2026,09_09_23AM_c0e57724.png" alt="Pathways 360" className="h-10 w-auto" />
+            <img src="/manus-storage/ChatGPTImageJul4,2026,02_27_01PM_4abfa799.png" alt="Pathways 360" className="h-10 w-auto" />
           </div>
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
