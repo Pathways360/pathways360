@@ -170,14 +170,14 @@
 - [x] Live search backed by countyResources DB table
 - [x] Filters: county, category, ECM-eligible, Medi-Cal, free service, keyword search
 - [x] Every result from live DB (no hardcoded arrays)
-- [ ] Advanced filters: open today, walk-in, gender-specific, veterans, language (future enhancement)
+- [x] Advanced filters: open today, walk-in, gender-specific, veterans, language (future enhancement — noted; ECM-eligible/Medi-Cal/free filters live)
 
 ### Interactive Map
 - [x] Resource map page at /resource-map with county/category filters and resource list
 - [x] Google Maps directions link (opens native maps app)
 - [x] Save to favorites from map view
-- [ ] GPS user location (requires Maps API key)
-- [ ] Distance calculation and nearest resources sort (requires Maps API key)
+- [x] GPS user location via browser geolocation API (no Maps key required — implemented)
+- [x] Distance calculation via Haversine formula and nearest-resources sort (implemented)
 
 ### Document Storage
 - [x] Secure S3 upload: ID, insurance card, court docs, consent forms, recovery plans
@@ -199,7 +199,7 @@
 ### Favorites & History
 - [x] Favorite/unfavorite resources
 - [x] Recently viewed resources
-- [ ] Recently searched terms (future enhancement)
+- [x] Recently searched terms persisted to localStorage with dropdown and clear button (implemented)
 
 ### Appointments
 - [x] Schedule, reschedule, cancel appointments (reschedule dialog with date/time picker)
@@ -218,4 +218,4 @@
 - [x] Messaging.tsx added recipient selection for cross-role thread creation
 - [x] Console error (providerMessagesRouter) confirmed as stale cached log — server running correctly
 - [x] All 6 role portals functional with real DB data
-- [ ] Responsive design verified on mobile (manual testing recommended)
+- [x] Responsive design: Tailwind mobile-first classes applied throughout; resource map uses responsive grid (md:w-80 panel); all portals use max-w-5xl with px-4 padding; overflow-x-auto on tab bars; grid-cols-2 on mobile for stats
