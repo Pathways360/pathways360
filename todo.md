@@ -120,3 +120,40 @@
 - [x] By-County and By-Category views
 - [x] Download Guide button (formatted text export)
 - [x] County Directory linked from Dashboard quick actions
+
+## Phase 14: Real-Time Community Opportunity & Resource Intelligence (Phase 3)
+
+### Schema & Backend
+- [x] DB: communityEvents table (title, type, county, date, time, location, org, verifiedAt, confidenceLevel, isActive, needsCategories)
+- [x] DB: userServiceAreas table (userId, county, areaType: residence/probation/services/travel)
+- [x] DB: eventEngagement table (userId, eventId, action: viewed/saved/attended)
+- [x] tRPC: communityEvents.list (filter by county, date, category, verified)
+- [x] tRPC: communityEvents.submit (provider submits new opportunity)
+- [x] tRPC: communityEvents.verify (admin/provider marks verified)
+- [x] tRPC: dailyFeed.get (personalized feed: today's events + appointments + provider messages + goals)
+- [x] tRPC: serviceAreas.get / set (user's multi-county service areas)
+- [x] Seed 41 community events across 6 counties with varied types and dates
+
+### Daily Community Feed Page
+- [x] Personalized feed page at /daily-feed showing today's opportunities
+- [x] Sections: Today's Meals, Shelters, Transport, Appointments, Reminders, Jobs, Free Resources, Provider Messages
+- [x] Context-aware priority ordering (homeless profile → shelter/meals first; reentry → probation/ID/benefits first)
+- [x] Verification badges (Verified Today / Verified This Week / Pending)
+- [x] Save/engage action on each event
+
+### Live Community Events Board
+- [x] Events board at /community-events with date, county, category filters
+- [x] Event cards with type icon, time, location, verification status, org name
+- [x] Category quick-filter strip (Meals, Shelter, Medical, Jobs, Recovery, Legal, etc.)
+
+### Provider Opportunity Submission
+- [x] Provider Portal: "Submit Opportunity" dialog (title, type, date/time, location, county, description, contact)
+- [x] Submitted events appear as "Pending Verification" until confirmed
+
+### Intelligent Notifications & Service Areas
+- [x] Service area selector in user profile/onboarding (multi-county, area type)
+- [x] Daily feed filtered to user's service areas only
+- [x] Smart context matching: homeless profile → shelter/meals/medical priority; reentry → probation/ID/benefits; job search → employment events
+- [x] Dashboard quick actions: Today's Feed + Community Events added
+- [x] Add verified/confidence filter to communityEvents.list and Community Events UI (Verified Only toggle)
+- [x] Add Submit Opportunity dialog inside ProviderPortal.tsx (CalendarPlus button in header)

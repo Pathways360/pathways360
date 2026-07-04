@@ -547,3 +547,100 @@ export type SharedProgressNote = typeof sharedProgressNotes.$inferSelect;
 export type ClientGapFlag = typeof clientGapFlags.$inferSelect;
 export type ResourceRecommendation = typeof resourceRecommendations.$inferSelect;
 export type CountyResource = typeof countyResources.$inferSelect;
+
+// ─── Phase 3: Community Events & Daily Feed ───────────────────────────────────
+
+export const communityEvents = mysqlTable("community_events", {
+  id: int("id").autoincrement().primaryKey(),
+  // Core info
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  eventType: mysqlEnum("eventType", [
+    "meal", "food_distribution", "food_bank", "mobile_pantry",
+    "emergency_shelter", "winter_shelter", "cooling_center", "warming_center",
+    "mobile_medical", "behavioral_health_outreach", "medication_clinic", "vaccination",
+    "clothing_closet", "laundry", "shower_program",
+    "bus_voucher", "transportation", "dmv_outreach",
+    "legal_clinic", "expungement_event",
+    "job_fair", "hiring_event", "resume_workshop", "training",
+    "community_college", "education",
+    "recovery_meeting", "support_group", "peer_support",
+    "probation_outreach", "parole_outreach",
+    "resource_fair", "disaster_assistance", "holiday_program",
+    "emergency_alert", "faith_based", "veterans_event",
+    "native_american_services", "family_services", "other"
+  ]).notNull().default("other"),
+  // When
+  eventDate: varchar("eventDate", { length: 20 }).notNull(), // YYYY-MM-DD
+  startTime: varchar("startTime", { length: 10 }),           // HH:MM
+  endTime: varchar("endTime", { length: 10 }),
+  isRecurring: boolean("isRecurring").default(false).notNull(),
+  recurringPattern: varchar("recurringPattern", { length: 100 }), // "daily", "weekly:mon,wed", etc.
+  // Where
+  county: mysqlEnum("county", ["butte","shasta","trinity","tehama","humboldt","siskiyou","other"]).notNull().default("other"),
+  city: varchar("city", { length: 100 }),
+  address: varchar("address", { length: 255 }),
+  locationName: varchar("locationName", { length: 255 }),
+  latitude: varchar("latitude", { length: 20 }),
+  longitude: varchar("longitude", { length: 20 }),
+  // Who
+  organizationName: varchar("organizationName", { length: 255 }),
+  organizationPhone: varchar("organizationPhone", { length: 30 }),
+  organizationWebsite: varchar("organizationWebsite", { length: 500 }),
+  contactName: varchar("contactName", { length: 100 }),
+  // Needs categories this event serves (comma-separated)
+  needsCategories: text("needsCategories"), // "housing,meals,medical"
+  // Verification
+  confidenceLevel: mysqlEnum("confidenceLevel", ["verified_today","verified_this_week","verified_this_month","pending","unverified"]).default("pending").notNull(),
+  verifiedAt: timestamp("verifiedAt"),
+  verifiedBy: int("verifiedBy"), // userId of verifier
+  sourceUrl: varchar("sourceUrl", { length: 500 }),
+  sourceType: mysqlEnum("sourceType", ["organization_direct","provider_submission","public_website","social_media","county_website","internal"]).default("provider_submission").notNull(),
+  // Capacity
+  spotsAvailable: int("spotsAvailable"),
+  requiresRegistration: boolean("requiresRegistration").default(false).notNull(),
+  registrationUrl: varchar("registrationUrl", { length: 500 }),
+  // Submission
+  submittedBy: int("submittedBy"), // userId of provider who submitted
+  isActive: boolean("isActive").default(true).notNull(),
+  isFeatured: boolean("isFeatured").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const userServiceAreas = mysqlTable("user_service_areas", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  county: mysqlEnum("county", ["butte","shasta","trinity","tehama","humboldt","siskiyou","other"]).notNull(),
+  areaType: mysqlEnum("areaType", ["residence","probation","services","temporary_housing","willing_to_travel"]).default("residence").notNull(),
+  isPrimary: boolean("isPrimary").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const eventEngagement = mysqlTable("event_engagement", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  eventId: int("eventId").notNull(),
+  action: mysqlEnum("action", ["viewed","saved","attending","attended","dismissed"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const dailyFeedItems = mysqlTable("daily_feed_items", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  itemType: mysqlEnum("itemType", ["community_event","appointment","provider_message","goal_reminder","resource_recommendation","system_alert"]).notNull(),
+  referenceId: int("referenceId"), // ID in the referenced table
+  title: varchar("title", { length: 255 }).notNull(),
+  body: text("body"),
+  county: varchar("county", { length: 50 }),
+  feedDate: varchar("feedDate", { length: 20 }).notNull(), // YYYY-MM-DD
+  priority: int("priority").default(5).notNull(), // 1=highest
+  isRead: boolean("isRead").default(false).notNull(),
+  isDismissed: boolean("isDismissed").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CommunityEvent = typeof communityEvents.$inferSelect;
+export type UserServiceArea = typeof userServiceAreas.$inferSelect;
+export type EventEngagement = typeof eventEngagement.$inferSelect;
+export type DailyFeedItem = typeof dailyFeedItems.$inferSelect;

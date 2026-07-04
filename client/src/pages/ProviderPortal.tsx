@@ -14,8 +14,87 @@ import {
   ChevronRight, Search, Bell, FileText, Shield, Settings,
   Home, Briefcase, Heart, Scale, RefreshCw, BookOpen, Car,
   CheckCircle, XCircle, Circle, Flag, Star, Eye, Edit3,
-  Phone, Mail, Calendar, TrendingUp, Activity, Award
+  Phone, Mail, Calendar, TrendingUp, Activity, Award, CalendarPlus
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+
+// ─── Submit Event Button ─────────────────────────────────────────────────────
+const EVENT_TYPE_OPTIONS = [
+  "meal","food_distribution","food_bank","mobile_pantry","emergency_shelter","winter_shelter",
+  "cooling_center","warming_center","mobile_medical","behavioral_health_outreach",
+  "medication_clinic","vaccination","clothing_closet","laundry","shower_program",
+  "bus_voucher","transportation","dmv_outreach","legal_clinic","expungement_event",
+  "job_fair","hiring_event","resume_workshop","training","community_college","education",
+  "recovery_meeting","support_group","peer_support","probation_outreach","parole_outreach",
+  "resource_fair","disaster_assistance","holiday_program","emergency_alert","faith_based",
+  "veterans_event","native_american_services","family_services","other",
+];
+const COUNTY_OPTIONS = ["butte","shasta","humboldt","tehama","trinity","siskiyou"];
+
+function SubmitEventButton() {
+  const [open, setOpen] = React.useState(false);
+  const [form, setForm] = React.useState({
+    title: "", description: "", eventType: "meal", eventDate: "",
+    startTime: "", endTime: "", county: "shasta", city: "",
+    address: "", locationName: "", organizationName: "", organizationPhone: "",
+    needsCategories: "",
+  });
+  const submitMutation = trpc.communityEvents.submit.useMutation({
+    onSuccess: () => { toast.success("Event submitted for review"); setOpen(false); setForm(f => ({ ...f, title: "", description: "", eventDate: "" })); },
+    onError: (e) => toast.error(e.message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" title="Submit community opportunity">
+          <CalendarPlus className="w-5 h-5 text-teal-600" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Submit Community Opportunity</DialogTitle></DialogHeader>
+        <div className="space-y-3 mt-2">
+          <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g., Free Lunch at Grace Church" /></div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label>Type *</Label>
+              <Select value={form.eventType} onValueChange={v => setForm(f => ({ ...f, eventType: v }))}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{EVENT_TYPE_OPTIONS.map(v => <SelectItem key={v} value={v} className="capitalize">{v.replace(/_/g," ")}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>County *</Label>
+              <Select value={form.county} onValueChange={v => setForm(f => ({ ...f, county: v }))}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{COUNTY_OPTIONS.map(v => <SelectItem key={v} value={v} className="capitalize">{v}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div><Label>Date *</Label><Input type="date" value={form.eventDate} onChange={e => setForm(f => ({ ...f, eventDate: e.target.value }))} /></div>
+            <div><Label>Start</Label><Input type="time" value={form.startTime} onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))} /></div>
+            <div><Label>End</Label><Input type="time" value={form.endTime} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label>City</Label><Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} /></div>
+            <div><Label>Location Name</Label><Input value={form.locationName} onChange={e => setForm(f => ({ ...f, locationName: e.target.value }))} /></div>
+          </div>
+          <div><Label>Address</Label><Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label>Organization</Label><Input value={form.organizationName} onChange={e => setForm(f => ({ ...f, organizationName: e.target.value }))} /></div>
+            <div><Label>Phone</Label><Input value={form.organizationPhone} onChange={e => setForm(f => ({ ...f, organizationPhone: e.target.value }))} /></div>
+          </div>
+          <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} /></div>
+          <div><Label>Needs Categories</Label><Input value={form.needsCategories} onChange={e => setForm(f => ({ ...f, needsCategories: e.target.value }))} placeholder="meals,shelter,medical" /></div>
+          <Button className="w-full" onClick={() => submitMutation.mutate(form as any)} disabled={!form.title || !form.eventDate || submitMutation.isPending}>
+            {submitMutation.isPending ? "Submitting..." : "Submit for Review"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // ─── Role Definitions ─────────────────────────────────────────────────────────
 const ROLE_LABELS: Record<string, string> = {
@@ -229,9 +308,12 @@ export default function ProviderPortal() {
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setTab("compose")} title="Compose message">
-            <MessageSquare className="w-5 h-5 text-teal-600" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <SubmitEventButton />
+            <Button variant="ghost" size="icon" onClick={() => setTab("compose")} title="Compose message">
+              <MessageSquare className="w-5 h-5 text-teal-600" />
+            </Button>
+          </div>
         </div>
         {/* Nav tabs */}
         <div className="max-w-3xl mx-auto px-4 pb-2 overflow-x-auto">

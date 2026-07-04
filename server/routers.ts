@@ -13,9 +13,10 @@ import {
   caseManagerAssignments, dailyCoachMessages, milestones,
   notificationPreferences, providerMessages,
   clientAgencyEnrollments, sharedProgressNotes, clientGapFlags,
-  resourceRecommendations, countyResources, progressMilestones
+  resourceRecommendations, countyResources, progressMilestones,
+  communityEvents, userServiceAreas, eventEngagement, dailyFeedItems
 } from "../drizzle/schema";
-import { eq, and, desc, gte, lte, or, like } from "drizzle-orm";
+import { eq, and, desc, gte, lte, or, like, inArray } from "drizzle-orm";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 async function requireDb() {
@@ -1038,6 +1039,273 @@ const countyResourcesRouter = router({
   }),
 });
 
+// ─── Community Events Router ────────────────────────────────────────────────
+const communityEventsRouter = router({
+  list: publicProcedure
+    .input(z.object({
+      county: z.string().optional(),
+      eventType: z.string().optional(),
+      needsCategory: z.string().optional(),
+      date: z.string().optional(), // YYYY-MM-DD, defaults to today
+      upcoming: z.boolean().optional(), // next 7 days
+      featured: z.boolean().optional(),
+      verifiedOnly: z.boolean().optional(), // only verified_today/this_week/this_month
+      limit: z.number().min(1).max(100).optional(),
+    }))
+    .query(async ({ input }) => {
+      const db = await requireDb();
+      const today = new Date().toISOString().split("T")[0];
+      const targetDate = input.date || today;
+      let query = db.select().from(communityEvents).$dynamic();
+      const conditions = [eq(communityEvents.isActive, true)];
+      if (input.county) conditions.push(eq(communityEvents.county, input.county as any));
+      if (input.featured) conditions.push(eq(communityEvents.isFeatured, true));
+      if (input.verifiedOnly) conditions.push(inArray(communityEvents.confidenceLevel, ["verified_today","verified_this_week","verified_this_month"] as any));
+      if (input.upcoming) {
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        const nextWeekStr = nextWeek.toISOString().split("T")[0];
+        conditions.push(gte(communityEvents.eventDate, today));
+        conditions.push(lte(communityEvents.eventDate, nextWeekStr));
+      } else if (input.date) {
+        conditions.push(eq(communityEvents.eventDate, input.date));
+      }
+      const events = await db.select().from(communityEvents)
+        .where(and(...conditions))
+        .orderBy(communityEvents.eventDate, communityEvents.startTime)
+        .limit(input.limit || 50);
+      // Filter by needsCategory if provided
+      if (input.needsCategory) {
+        return events.filter(e => (e.needsCategories || "").toLowerCase().includes(input.needsCategory!.toLowerCase()));
+      }
+      return events;
+    }),
+
+  getPersonalized: protectedProcedure
+    .input(z.object({ date: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const today = new Date().toISOString().split("T")[0];
+      const targetDate = input.date || today;
+      // Get user's service areas
+      const serviceAreas = await db.select().from(userServiceAreas).where(eq(userServiceAreas.userId, ctx.user.id));
+      const counties = serviceAreas.length > 0 ? serviceAreas.map(sa => sa.county) : [];
+      // Get user's assessment for context
+      const [assessment] = await db.select().from(needsAssessments).where(eq(needsAssessments.userId, ctx.user.id)).limit(1);
+      // Determine priority needs from assessment
+      const priorityNeeds: string[] = [];
+      if (assessment) {
+        const housingLower = (assessment.housingStatus || "").toLowerCase();
+        if (housingLower.includes("outdoor") || housingLower.includes("vehicle") || housingLower.includes("shelter") || housingLower.includes("homeless")) {
+          priorityNeeds.push("housing", "meals", "shelter", "medical", "laundry", "shower");
+        }
+        if (assessment.onProbationOrParole) priorityNeeds.push("probation", "reentry", "legal");
+        const empLower = (assessment.employmentStatus || "").toLowerCase();
+        if (empLower.includes("not") || empLower.includes("unemployed") || empLower.includes("looking")) {
+          priorityNeeds.push("employment", "jobs", "training");
+        }
+        if (assessment.inRecovery) priorityNeeds.push("recovery", "support_group");
+      }
+      // Fetch events for user's counties (or all if no service areas set)
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      const nextWeekStr = nextWeek.toISOString().split("T")[0];
+      let events = await db.select().from(communityEvents)
+        .where(and(
+          eq(communityEvents.isActive, true),
+          gte(communityEvents.eventDate, today),
+          lte(communityEvents.eventDate, nextWeekStr)
+        ))
+        .orderBy(communityEvents.eventDate, communityEvents.startTime)
+        .limit(100);
+      // Filter to user's counties if set
+      if (counties.length > 0) {
+        events = events.filter(e => counties.includes(e.county as any));
+      }
+      // Score by priority needs
+      const scored = events.map(e => {
+        const cats = (e.needsCategories || "").toLowerCase();
+        const score = priorityNeeds.filter(n => cats.includes(n)).length;
+        return { ...e, relevanceScore: score };
+      }).sort((a, b) => b.relevanceScore - a.relevanceScore);
+      return { events: scored, priorityNeeds, serviceAreas };
+    }),
+
+  submit: protectedProcedure
+    .input(z.object({
+      title: z.string().min(3).max(255),
+      description: z.string().optional(),
+      eventType: z.string(),
+      eventDate: z.string(),
+      startTime: z.string().optional(),
+      endTime: z.string().optional(),
+      county: z.string(),
+      city: z.string().optional(),
+      address: z.string().optional(),
+      locationName: z.string().optional(),
+      organizationName: z.string().optional(),
+      organizationPhone: z.string().optional(),
+      needsCategories: z.string().optional(),
+      spotsAvailable: z.number().optional(),
+      requiresRegistration: z.boolean().optional(),
+      registrationUrl: z.string().optional(),
+      isRecurring: z.boolean().optional(),
+      recurringPattern: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN", message: "Providers only" });
+      const db = await requireDb();
+      const [event] = await db.insert(communityEvents).values({
+        title: input.title,
+        description: input.description,
+        eventType: input.eventType as any,
+        eventDate: input.eventDate,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        county: input.county as any,
+        city: input.city,
+        address: input.address,
+        locationName: input.locationName,
+        organizationName: input.organizationName,
+        organizationPhone: input.organizationPhone,
+        needsCategories: input.needsCategories,
+        spotsAvailable: input.spotsAvailable,
+        requiresRegistration: input.requiresRegistration || false,
+        registrationUrl: input.registrationUrl,
+        isRecurring: input.isRecurring || false,
+        recurringPattern: input.recurringPattern,
+        submittedBy: ctx.user.id,
+        sourceType: "provider_submission",
+        confidenceLevel: "pending",
+      }).$returningId();
+      return { success: true, eventId: event.id };
+    }),
+
+  verify: protectedProcedure
+    .input(z.object({ eventId: z.number(), confidenceLevel: z.enum(["verified_today","verified_this_week","verified_this_month","pending","unverified"]) }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role === "user") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      await db.update(communityEvents).set({
+        confidenceLevel: input.confidenceLevel,
+        verifiedAt: new Date(),
+        verifiedBy: ctx.user.id,
+      }).where(eq(communityEvents.id, input.eventId));
+      return { success: true };
+    }),
+
+  engage: protectedProcedure
+    .input(z.object({ eventId: z.number(), action: z.enum(["viewed","saved","attending","attended","dismissed"]) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      await db.insert(eventEngagement).values({ userId: ctx.user.id, eventId: input.eventId, action: input.action });
+      return { success: true };
+    }),
+
+  getMyEngagements: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    return db.select().from(eventEngagement).where(eq(eventEngagement.userId, ctx.user.id)).orderBy(desc(eventEngagement.createdAt)).limit(100);
+  }),
+});
+
+// ─── Service Areas Router ─────────────────────────────────────────────────────
+const serviceAreasRouter = router({
+  get: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    return db.select().from(userServiceAreas).where(eq(userServiceAreas.userId, ctx.user.id));
+  }),
+  set: protectedProcedure
+    .input(z.object({
+      areas: z.array(z.object({
+        county: z.string(),
+        areaType: z.enum(["residence","probation","services","temporary_housing","willing_to_travel"]),
+        isPrimary: z.boolean().optional(),
+      }))
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      // Replace all service areas for this user
+      await db.delete(userServiceAreas).where(eq(userServiceAreas.userId, ctx.user.id));
+      if (input.areas.length > 0) {
+        await db.insert(userServiceAreas).values(
+          input.areas.map(a => ({ userId: ctx.user.id, county: a.county as any, areaType: a.areaType, isPrimary: a.isPrimary || false }))
+        );
+      }
+      return { success: true };
+    }),
+});
+
+// ─── Daily Feed Router ────────────────────────────────────────────────────────
+const dailyFeedRouter = router({
+  get: protectedProcedure
+    .input(z.object({ date: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const today = new Date().toISOString().split("T")[0];
+      const targetDate = input.date || today;
+      // Get user's service areas
+      const serviceAreas = await db.select().from(userServiceAreas).where(eq(userServiceAreas.userId, ctx.user.id));
+      const counties = serviceAreas.map(sa => sa.county);
+      // Get assessment context
+      const [assessment] = await db.select().from(needsAssessments).where(eq(needsAssessments.userId, ctx.user.id)).limit(1);
+      // Determine user context profile
+      const isHomeless = assessment ? (() => {
+        const h = (assessment.housingStatus || "").toLowerCase();
+        return h.includes("outdoor") || h.includes("vehicle") || h.includes("shelter") || h.includes("homeless");
+      })() : false;
+      const isReentry = assessment?.onProbationOrParole || false;
+      const isJobSeeking = assessment ? (() => {
+        const e = (assessment.employmentStatus || "").toLowerCase();
+        return e.includes("not") || e.includes("unemployed") || e.includes("looking");
+      })() : false;
+      const inRecovery = assessment?.inRecovery || false;
+      // Fetch today's community events for user's counties
+      const eventConditions = [eq(communityEvents.isActive, true), eq(communityEvents.eventDate, targetDate)];
+      if (counties.length > 0) {
+        // Filter to user's counties (client-side since drizzle OR is complex)
+      }
+      const todayEvents = await db.select().from(communityEvents)
+        .where(and(...eventConditions))
+        .orderBy(communityEvents.startTime)
+        .limit(30);
+      const filteredEvents = counties.length > 0 ? todayEvents.filter(e => counties.includes(e.county as any)) : todayEvents;
+      // Fetch today's appointments
+      const startOfDay = new Date(targetDate + "T00:00:00");
+      const endOfDay = new Date(targetDate + "T23:59:59");
+      const todayAppointments = await db.select().from(appointments)
+        .where(and(eq(appointments.userId, ctx.user.id), gte(appointments.appointmentDate, startOfDay), lte(appointments.appointmentDate, endOfDay)))
+        .orderBy(appointments.appointmentDate);
+      // Fetch unread provider messages
+      const unreadMessages = await db.select().from(providerMessages)
+        .where(and(eq(providerMessages.toClientId, ctx.user.id), eq(providerMessages.read, false)))
+        .orderBy(desc(providerMessages.createdAt)).limit(10);
+      // Fetch active goals
+      const activeGoals = await db.select().from(goals)
+        .where(and(eq(goals.userId, ctx.user.id), eq(goals.status, "in_progress")))
+        .orderBy(goals.priority).limit(5);
+      // Score and categorize events
+      const scoredEvents = filteredEvents.map(e => {
+        const cats = (e.needsCategories || "").toLowerCase();
+        let priority = 5;
+        if (isHomeless && (cats.includes("meal") || cats.includes("shelter") || cats.includes("food"))) priority = 1;
+        else if (isHomeless && (cats.includes("medical") || cats.includes("shower") || cats.includes("laundry"))) priority = 2;
+        else if (isReentry && (cats.includes("probation") || cats.includes("legal") || cats.includes("reentry"))) priority = 1;
+        else if (isJobSeeking && (cats.includes("job") || cats.includes("employment") || cats.includes("hiring"))) priority = 2;
+        else if (inRecovery && (cats.includes("recovery") || cats.includes("support_group") || cats.includes("aa") || cats.includes("na"))) priority = 2;
+        return { ...e, feedPriority: priority };
+      }).sort((a, b) => a.feedPriority - b.feedPriority);
+      return {
+        date: targetDate,
+        context: { isHomeless, isReentry, isJobSeeking, inRecovery },
+        serviceAreas,
+        events: scoredEvents,
+        appointments: todayAppointments,
+        providerMessages: unreadMessages,
+        activeGoals,
+      };
+    }),
+});
+
 // ─── App Router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -1057,6 +1325,9 @@ export const appRouter = router({
   multiAgency: multiAgencyRouter,
   recommendations: recommendationsRouter,
   countyResources: countyResourcesRouter,
+  communityEvents: communityEventsRouter,
+  serviceAreas: serviceAreasRouter,
+  dailyFeed: dailyFeedRouter,
 });
 
 export type AppRouter = typeof appRouter;

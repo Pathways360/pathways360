@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import {
   Heart, MapPin, Calendar, Target, MessageCircle,
   Sparkles, ChevronRight, CheckCircle, Clock, AlertCircle,
-  Plus, Star, Award, ArrowRight, BookOpen, Phone, Briefcase, Shield, Bell, Mail, Building2
+  Plus, Star, Award, ArrowRight, BookOpen, Phone, Briefcase, Shield, Bell, Mail, Building2, Sun, CalendarDays
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
@@ -27,6 +27,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const QUICK_ACTIONS = [
+  { icon: <Sun className="w-5 h-5" />, label: "Today's Feed", path: "/daily-feed", color: "bg-amber-100 text-amber-700 hover:bg-amber-200" },
+  { icon: <CalendarDays className="w-5 h-5" />, label: "Community Events", path: "/community-events", color: "bg-sky-100 text-sky-700 hover:bg-sky-200" },
   { icon: <MapPin className="w-5 h-5" />, label: "Find Resources", path: "/resources", color: "bg-brand-teal/10 text-brand-teal hover:bg-brand-teal/20" },
   { icon: <Building2 className="w-5 h-5" />, label: "County Directory", path: "/county-directory", color: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200" },
   { icon: <MessageCircle className="w-5 h-5" />, label: "Talk to Counselor", path: "/counselor", color: "bg-brand-rose/10 text-brand-rose hover:bg-brand-rose/20" },

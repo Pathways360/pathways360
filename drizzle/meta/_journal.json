@@ -43,6 +43,13 @@
       "when": 1783121684886,
       "tag": "0005_dazzling_black_bolt",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1783123147527,
+      "tag": "0006_gray_scream",
+      "breakpoints": true
     }
   ]
 }

@@ -17,6 +17,8 @@ import Coach from "./pages/Coach";
 import CaseManagerPortal from "./pages/CaseManagerPortal";
 import ProviderPortal from "./pages/ProviderPortal";
 import CountyDirectory from "./pages/CountyDirectory";
+import DailyFeed from "./pages/DailyFeed";
+import CommunityEvents from "./pages/CommunityEvents";
 
 function Router() {
   return (
@@ -33,6 +35,8 @@ function Router() {
       <Route path="/portal" component={CaseManagerPortal} />
       <Route path="/provider-portal" component={ProviderPortal} />
       <Route path="/county-directory" component={CountyDirectory} />
+      <Route path="/daily-feed" component={DailyFeed} />
+      <Route path="/community-events" component={CommunityEvents} />
       <Route path={"/profile"} component={Profile} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />

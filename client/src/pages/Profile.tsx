@@ -12,11 +12,99 @@ import { trpc } from "@/lib/trpc";
 import {
   User, Bell, Shield, LogOut, ChevronLeft,
   Heart, Phone, MapPin, Globe, Calendar,
-  CheckCircle, AlertTriangle, BookOpen, Sparkles, Target
+  CheckCircle, AlertTriangle, BookOpen, Sparkles, Target, Plus, X, Sun
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { Link } from "wouter";
+
+const COUNTIES = [
+  { value: "butte", label: "Butte County" },
+  { value: "shasta", label: "Shasta County" },
+  { value: "humboldt", label: "Humboldt County" },
+  { value: "tehama", label: "Tehama County" },
+  { value: "trinity", label: "Trinity County" },
+  { value: "siskiyou", label: "Siskiyou County" },
+];
+
+const AREA_TYPES = [
+  { value: "residence", label: "Home County" },
+  { value: "probation", label: "Probation County" },
+  { value: "services", label: "Services County" },
+  { value: "temporary_housing", label: "Temporary Housing" },
+  { value: "willing_to_travel", label: "Willing to Travel" },
+];
+
+function ServiceAreasCard() {
+  const { data: areas = [], refetch } = trpc.serviceAreas.get.useQuery();
+  const setMutation = trpc.serviceAreas.set.useMutation({
+    onSuccess: () => { toast.success("Service areas saved"); refetch(); },
+    onError: () => toast.error("Failed to save service areas"),
+  });
+  const [newCounty, setNewCounty] = useState("butte");
+  const [newType, setNewType] = useState<"residence"|"probation"|"services"|"temporary_housing"|"willing_to_travel">("residence");
+
+  const addArea = () => {
+    const exists = areas.some(a => a.county === newCounty && a.areaType === newType);
+    if (exists) { toast.info("Already added"); return; }
+    const updated = [...areas.map(a => ({ county: a.county, areaType: a.areaType, isPrimary: a.isPrimary })), { county: newCounty, areaType: newType, isPrimary: areas.length === 0 }];
+    setMutation.mutate({ areas: updated as any });
+  };
+
+  const removeArea = (county: string, areaType: string) => {
+    const updated = areas.filter(a => !(a.county === county && a.areaType === areaType)).map(a => ({ county: a.county, areaType: a.areaType, isPrimary: a.isPrimary }));
+    setMutation.mutate({ areas: updated as any });
+  };
+
+  return (
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Sun className="w-4 h-4 text-amber-500" /> My Service Areas
+        </CardTitle>
+        <CardDescription>Counties where you receive services. Your Daily Feed will show events from these areas.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {areas.length === 0 && (
+          <p className="text-xs text-muted-foreground">No service areas set. Add your county below to personalize your Daily Feed.</p>
+        )}
+        <div className="space-y-1.5">
+          {areas.map(a => (
+            <div key={`${a.county}-${a.areaType}`} className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
+              <div>
+                <span className="text-sm font-medium capitalize">{a.county} County</span>
+                <span className="text-xs text-muted-foreground ml-2">{AREA_TYPES.find(t => t.value === a.areaType)?.label}</span>
+                {a.isPrimary && <Badge className="ml-2 text-xs bg-primary/10 text-primary border-primary/20">Primary</Badge>}
+              </div>
+              <button onClick={() => removeArea(a.county, a.areaType)} className="text-muted-foreground hover:text-destructive transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Select value={newCounty} onValueChange={setNewCounty}>
+            <SelectTrigger className="flex-1 h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>{COUNTIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+          </Select>
+          <Select value={newType} onValueChange={v => setNewType(v as any)}>
+            <SelectTrigger className="flex-1 h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>{AREA_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+          </Select>
+          <Button size="sm" className="h-8 px-2" onClick={addArea} disabled={setMutation.isPending}>
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+        <Link href="/daily-feed">
+          <Button variant="outline" size="sm" className="w-full text-xs gap-1">
+            <Sun className="w-3.5 h-3.5" /> View My Daily Feed
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -598,6 +686,8 @@ export default function Profile() {
                 </div>
               </CardContent>
             </Card>
+
+            <ServiceAreasCard />
 
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-3">
