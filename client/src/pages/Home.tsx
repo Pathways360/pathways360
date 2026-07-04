@@ -76,10 +76,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-border">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center">
-              <Heart className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-display font-bold text-lg text-foreground">Pathways 360</span>
+            <img src="/manus-storage/ChatGPTImageJul4,2026,09_09_23AM_c0e57724.png" alt="Pathways 360" className="h-10 w-auto" />
           </div>
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
@@ -112,13 +109,11 @@ export default function Home() {
               <Sparkles className="w-4 h-4 text-brand-amber" />
               Your Personal Life Restoration Platform
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl md:text-6xl font-bold leading-tight mb-6">
-              You don't have to<br />
-              <span className="text-brand-amber">walk alone.</span>
+            <h1 className="font-display text-3xl sm:text-4xl md:text-6xl font-bold leading-tight mb-4">
+              Coordinate Care. Improve Outcomes. Transform Lives.
             </h1>
-            <p className="text-base md:text-xl text-white/80 mb-8 max-w-2xl leading-relaxed">
-              Pathways 360 is your personal AI life coach, resource navigator, goal planner,
-              and daily guide — built for anyone who needs a little help finding their way forward.
+            <p className="text-base md:text-lg text-white/90 mb-8 max-w-2xl leading-relaxed">
+              Multi-agency collaboration platform connecting clients with resources, providers, and coordinated support for life restoration.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
