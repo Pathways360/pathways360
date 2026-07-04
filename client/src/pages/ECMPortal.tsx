@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import Footer from "@/components/Footer";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -346,6 +347,7 @@ export default function ECMPortal() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -234,6 +235,7 @@ export default function AdminPortal() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

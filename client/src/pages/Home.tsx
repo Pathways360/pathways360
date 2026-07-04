@@ -1,6 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
+import Footer from "@/components/Footer";
 import {
   Heart, MapPin, Star, Users, Shield, Sparkles,
   ArrowRight, CheckCircle, Phone, Calendar, Target,
@@ -314,28 +315,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Footer ──────────────────────────────────────────────────────────── */}
-      <footer className="bg-brand-navy text-white/60 py-10">
-        <div className="container">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg gradient-brand flex items-center justify-center">
-                <Heart className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="font-display font-bold text-white">Pathways 360</span>
-            </div>
-            <p className="text-sm text-center">
-              <span className="text-white/80 font-medium">You don't have to walk alone.</span>
-              {" "}© {new Date().getFullYear()} Pathways 360. All rights reserved.
-            </p>
-            <div className="flex gap-4 text-sm">
-              <button className="hover:text-white transition-colors">Privacy</button>
-              <button className="hover:text-white transition-colors">Terms</button>
-              <button className="hover:text-white transition-colors">Contact</button>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -228,3 +228,10 @@
 - [x] Audit all other pages (AdminPortal, Onboarding, etc.) for logo consistency
 - [x] Verify responsive layout with new logo (includes tagline, may be wider)
 - [x] Screenshot verification on mobile and desktop
+
+## Phase 17: Footer Branding & Consistency
+- [x] Create reusable Footer component with logo, tagline, and links
+- [x] Add footer to Home page
+- [x] Add footer to all authenticated portal pages (Dashboard, all role portals)
+- [x] Ensure footer is subtle and professional (no overdoing branding)
+- [x] Test footer responsiveness on mobile and desktop

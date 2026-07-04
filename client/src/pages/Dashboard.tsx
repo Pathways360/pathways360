@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
+import Footer from "@/components/Footer";
 import {
   Heart, MapPin, Calendar, Target, MessageCircle,
   Sparkles, ChevronRight, CheckCircle, Clock, AlertCircle,
@@ -362,6 +363,7 @@ export default function Dashboard() {
         </div>
       </nav>
       <div className="h-16 md:hidden" />
+      <Footer />
     </div>
   );
 }
