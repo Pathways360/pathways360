@@ -6,8 +6,8 @@
 import type { Express } from "express";
 import { sdk } from "./_core/sdk";
 import { getDb } from "./db";
-import { appointments, users } from "../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { appointments, users, providerMessages } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export function registerScheduledRoutes(app: Express) {
   app.post("/api/scheduled/appointment-reminder", async (req, res) => {
@@ -59,18 +59,17 @@ export function registerScheduledRoutes(app: Express) {
         minute: "2-digit",
       });
 
-      // Log the reminder (in production this would send a push/SMS/email)
-      console.log(
-        `[Reminder] Sending reminder to user ${appt.userId} for appointment "${appt.title}" at ${apptTime}`
-      );
-
-      // Mark that the reminder fired by storing a note (optional — keeps audit trail)
-      // In a full production system you would call a push notification service here
-      // (e.g. Firebase Cloud Messaging, Twilio, or the Manus notification API)
-      // For now we log and respond OK so the heartbeat job is satisfied.
-      console.log(
-        `[Reminder] Hey ${userName}! Reminder: "${appt.title}" is coming up — ${apptTime}. You've got this! 💪`
-      );
+      // Create an inbox notification in the providerMessages table so it appears on the client dashboard
+      await db.insert(providerMessages).values({
+        fromProviderId: appt.userId, // system message — from self
+        toClientId: appt.userId,
+        organizationId: 0, // system/automated
+        messageType: "reminder",
+        subject: `Reminder: ${appt.title}`,
+        content: `Hey ${userName}! Your appointment "${appt.title}" is coming up — ${apptTime}${appt.location ? ` at ${appt.location}` : ""}. You've got this! 💪`,
+        read: false,
+      });
+      console.log(`[Reminder] Inbox notification created for user ${appt.userId} — "${appt.title}" at ${apptTime}`);
 
       res.json({
         ok: true,

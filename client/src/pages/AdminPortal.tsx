@@ -95,18 +95,87 @@ export default function AdminPortal() {
 
       <div className="max-w-5xl mx-auto px-4 py-4">
         {activeTab === "overview" && stats && (
-          <div className="space-y-4">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Recent Users</h2>
-            <div className="space-y-2">
-              {stats.recentUsers.map((u: any) => (
-                <div key={u.id} className="bg-white rounded-xl border p-3 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">{u.name}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <Badge className={`text-xs ${ROLE_COLORS[u.role] || "bg-gray-100 text-gray-800"}`}>{ROLE_LABELS[u.role] || u.role}</Badge>
+          <div className="space-y-5">
+            {/* Key Metrics */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Total Users", value: stats.totalUsers, color: "text-blue-600" },
+                { label: "Active Goals", value: stats.totalGoals, color: "text-green-600" },
+                { label: "Resources", value: stats.totalResources, color: "text-purple-600" },
+                { label: "Events", value: stats.totalEvents, color: "text-orange-600" },
+                { label: "Appointments", value: stats.totalAppointments, color: "text-teal-600" },
+                { label: "Messages Sent", value: stats.totalMessages, color: "text-rose-600" },
+              ].map(m => (
+                <div key={m.label} className="bg-white rounded-xl border p-3 text-center">
+                  <p className={`text-2xl font-bold ${m.color}`}>{String(m.value)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{m.label}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Role Breakdown */}
+            <div className="bg-white rounded-xl border p-4">
+              <h3 className="font-semibold text-sm mb-3">Users by Role</h3>
+              <div className="space-y-2">
+                {Object.entries(stats.roleBreakdown as Record<string,number>).sort((a,b) => b[1]-a[1]).map(([role, count]) => (
+                  <div key={role} className="flex items-center gap-2">
+                    <Badge className={`text-xs w-32 justify-center ${ROLE_COLORS[role] || "bg-gray-100 text-gray-800"}`}>{ROLE_LABELS[role] || role}</Badge>
+                    <div className="flex-1 bg-gray-100 rounded-full h-2">
+                      <div className="bg-red-500 h-2 rounded-full" style={{ width: `${Math.round((count / (stats.totalUsers as number)) * 100)}%` }} />
+                    </div>
+                    <span className="text-xs font-medium w-6 text-right">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Resource Categories */}
+            <div className="bg-white rounded-xl border p-4">
+              <h3 className="font-semibold text-sm mb-3">Top Resource Categories</h3>
+              <div className="space-y-2">
+                {(stats.topCategories as any[]).map((cat: any) => (
+                  <div key={cat.name} className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-36 truncate capitalize">{cat.name.replace(/_/g, " ")}</span>
+                    <div className="flex-1 bg-gray-100 rounded-full h-2">
+                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${Math.round((cat.count / (stats.topCategories[0]?.count || 1)) * 100)}%` }} />
+                    </div>
+                    <span className="text-xs font-medium w-6 text-right">{cat.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Signups */}
+            <div className="bg-white rounded-xl border p-4">
+              <h3 className="font-semibold text-sm mb-3">Recent Signups (Last 7 Days)</h3>
+              {Object.keys(stats.signupsByDay as Record<string,number>).length === 0 ? (
+                <p className="text-xs text-muted-foreground">No new signups in the last 7 days.</p>
+              ) : (
+                <div className="space-y-1">
+                  {Object.entries(stats.signupsByDay as Record<string,number>).map(([day, count]) => (
+                    <div key={day} className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{day}</span>
+                      <span className="font-medium">{count} new user{count !== 1 ? "s" : ""}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Users */}
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">Recent Users</h3>
+              <div className="space-y-2">
+                {stats.recentUsers.map((u: any) => (
+                  <div key={u.id} className="bg-white rounded-xl border p-3 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{u.name}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <Badge className={`text-xs ${ROLE_COLORS[u.role] || "bg-gray-100 text-gray-800"}`}>{ROLE_LABELS[u.role] || u.role}</Badge>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

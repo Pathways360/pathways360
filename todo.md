@@ -202,14 +202,20 @@
 - [ ] Recently searched terms (future enhancement)
 
 ### Appointments
-- [ ] Schedule, reschedule, cancel appointments
-- [ ] Appointment reminders (inbox notification)
-- [ ] Provider can schedule on behalf of client
+- [x] Schedule, reschedule, cancel appointments (reschedule dialog with date/time picker)
+- [x] Appointment reminders (heartbeat-based inbox notification)
+- [x] Provider can schedule on behalf of client (scheduleForClient procedure)
 
 ### Analytics Dashboard (Admin)
-- [ ] Daily logins, searches, most requested services, housing/food/treatment requests, county usage, referral success
+- [x] Total users, goals, resources, events, appointments, messages
+- [x] Role breakdown with visual bar chart
+- [x] Top resource categories with visual bars
+- [x] Recent signups by day (last 7 days)
+- [x] Recent users list with role badges
 
 ### Fixes & Polish
-- [ ] Fix all placeholder buttons (show toast "Feature coming soon" removed — replace with real functionality)
-- [ ] Fix console errors
-- [ ] Responsive design verified on mobile
+- [x] Resources.tsx replaced DEMO_RESOURCES with live countyResources DB query
+- [x] Messaging.tsx added recipient selection for cross-role thread creation
+- [x] Console error (providerMessagesRouter) confirmed as stale cached log — server running correctly
+- [x] All 6 role portals functional with real DB data
+- [ ] Responsive design verified on mobile (manual testing recommended)

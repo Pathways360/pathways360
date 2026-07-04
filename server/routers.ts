@@ -469,6 +469,45 @@ const appointmentsRouter = router({
 
       return { id: apptId };
     }),
+  reschedule: protectedProcedure
+    .input(z.object({ id: z.number(), appointmentDate: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const newDate = new Date(input.appointmentDate);
+      // Cancel old reminder job if exists
+      const [appt] = await db.select().from(appointments)
+        .where(and(eq(appointments.id, input.id), eq(appointments.userId, ctx.user.id))).limit(1);
+      if (appt?.scheduleCronTaskUid) {
+        try { const sessionToken = getSessionToken(ctx); await deleteHeartbeatJob(appt.scheduleCronTaskUid, sessionToken); } catch {}
+      }
+      await db.update(appointments).set({ appointmentDate: newDate, scheduleCronTaskUid: null }).where(and(eq(appointments.id, input.id), eq(appointments.userId, ctx.user.id)));
+      return { success: true };
+    }),
+  scheduleForClient: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      title: z.string().min(1),
+      description: z.string().optional(),
+      type: z.enum(["medical","legal","court","probation","employment","housing","recovery","medication","other"]),
+      appointmentDate: z.string(),
+      location: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const providerRoles = ["case_manager","ecm_worker","probation_officer","counselor","org_admin","admin"];
+      if (!providerRoles.includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN" });
+      const result = await db.insert(appointments).values({
+        userId: input.clientId,
+        title: input.title,
+        description: input.description,
+        type: input.type,
+        appointmentDate: new Date(input.appointmentDate),
+        location: input.location,
+        reminderEnabled: true,
+        reminderMinutesBefore: 60,
+      });
+      return { id: Number(result[0].insertId) };
+    }),
   complete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -686,6 +725,78 @@ const caseManagerRouter = router({
           consentDate: new Date(),
         });
       }
+      return { success: true };
+    }),
+  // Provider-side: get full client list (all users with role=user, for providers without assignment system)
+  getAllClients: protectedProcedure.query(async ({ ctx }) => {
+    const providerRoles = ["case_manager","ecm_worker","probation_officer","counselor","org_admin","admin"];
+    if (!providerRoles.includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN" });
+    const db = await requireDb();
+    return db.select({ id: users.id, name: users.name, role: users.role, createdAt: users.createdAt })
+      .from(users).where(eq(users.role, "user")).orderBy(desc(users.createdAt)).limit(100);
+  }),
+  getClientProfile: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const providerRoles = ["case_manager","ecm_worker","probation_officer","counselor","org_admin","admin"];
+      if (!providerRoles.includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, input.clientId)).limit(1);
+      const [assessment] = await db.select().from(needsAssessments).where(eq(needsAssessments.userId, input.clientId)).limit(1);
+      const clientGoals = await db.select().from(goals).where(eq(goals.userId, input.clientId)).orderBy(desc(goals.createdAt)).limit(10);
+      const clientAppts = await db.select().from(appointments).where(eq(appointments.userId, input.clientId)).orderBy(desc(appointments.appointmentDate)).limit(10);
+      const gapFlags = await db.select().from(clientGapFlags).where(and(eq(clientGapFlags.clientId, input.clientId), eq(clientGapFlags.resolved, false)));
+      return { profile: profile || null, assessment: assessment || null, goals: clientGoals, appointments: clientAppts, gapFlags };
+    }),
+  addNote: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      content: z.string().min(1),
+      noteType: z.enum(["progress","concern","milestone","handoff","referral","crisis","housing_update","employment_update","recovery_update","legal_update","medical_update","general"]).default("general"),
+      visibility: z.enum(["all_agencies","own_agency"]).default("all_agencies"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const providerRoles = ["case_manager","ecm_worker","probation_officer","counselor","org_admin","admin"];
+      if (!providerRoles.includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      await db.insert(sharedProgressNotes).values({
+        clientId: input.clientId,
+        authorProviderId: ctx.user.id,
+        authorOrganizationId: 1,
+        noteType: input.noteType,
+        content: input.content,
+        visibility: input.visibility,
+      });
+      return { success: true };
+    }),
+  getNotes: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const providerRoles = ["case_manager","ecm_worker","probation_officer","counselor","org_admin","admin"];
+      if (!providerRoles.includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      return db.select().from(sharedProgressNotes)
+        .where(eq(sharedProgressNotes.clientId, input.clientId))
+        .orderBy(desc(sharedProgressNotes.createdAt)).limit(50);
+    }),
+  flagGap: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      gapCategory: z.enum(["no_housing_plan","chronically_homeless","no_mental_health_provider","no_substance_use_treatment","no_government_id","no_income","no_health_insurance","no_employment_plan","no_ecm_provider","probation_compliance_risk","no_peer_support","no_transportation","no_legal_representation","no_education_plan","family_reunification_needed","medication_not_managed","crisis_risk","other"]),
+      severity: z.enum(["low","medium","high","critical"]).default("medium"),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const providerRoles = ["case_manager","ecm_worker","probation_officer","counselor","org_admin","admin"];
+      if (!providerRoles.includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await requireDb();
+      await db.insert(clientGapFlags).values({
+        clientId: input.clientId,
+        flaggedByProviderId: ctx.user.id,
+        gapCategory: input.gapCategory,
+        severity: input.severity,
+        notes: input.notes,
+      });
       return { success: true };
     }),
 });
@@ -1494,8 +1605,30 @@ const adminRouter = router({
     const [{ count: totalGoals }] = await db.select({ count: db.$count(goals) }).from(goals);
     const [{ count: totalResources }] = await db.select({ count: db.$count(countyResources) }).from(countyResources);
     const [{ count: totalEvents }] = await db.select({ count: db.$count(communityEvents) }).from(communityEvents);
+    const [{ count: totalAppointments }] = await db.select({ count: db.$count(appointments) }).from(appointments);
+    const [{ count: totalMessages }] = await db.select({ count: db.$count(providerMessages) }).from(providerMessages);
     const recentUsers = await db.select({ id: users.id, name: users.name, role: users.role, createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(10);
-    return { totalUsers, totalGoals, totalResources, totalEvents, recentUsers };
+    // Role breakdown
+    const allUsers = await db.select({ role: users.role }).from(users);
+    const roleBreakdown: Record<string, number> = {};
+    allUsers.forEach((u: any) => { roleBreakdown[u.role] = (roleBreakdown[u.role] || 0) + 1; });
+    // Top resource categories
+    const allResources = await db.select({ category: countyResources.category }).from(countyResources);
+    const categoryBreakdown: Record<string, number> = {};
+    allResources.forEach((r: any) => { categoryBreakdown[r.category] = (categoryBreakdown[r.category] || 0) + 1; });
+    const topCategories = Object.entries(categoryBreakdown).sort((a,b) => b[1]-a[1]).slice(0,8).map(([name,count]) => ({ name, count }));
+    // County breakdown
+    const countyBreakdown: Record<string, number> = {};
+    allResources.forEach((r: any) => { if (r.category) countyBreakdown[r.category] = (countyBreakdown[r.category] || 0) + 1; });
+    // Recent signups per day (last 7 days)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentSignups = await db.select({ createdAt: users.createdAt }).from(users).where(gte(users.createdAt, sevenDaysAgo));
+    const signupsByDay: Record<string, number> = {};
+    recentSignups.forEach((u: any) => {
+      const day = new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      signupsByDay[day] = (signupsByDay[day] || 0) + 1;
+    });
+    return { totalUsers, totalGoals, totalResources, totalEvents, totalAppointments, totalMessages, recentUsers, roleBreakdown, topCategories, signupsByDay };
   }),
   setUserRole: protectedProcedure.input(z.object({ userId: z.number(), role: z.enum(['user','case_manager','ecm_worker','probation_officer','counselor','org_admin','admin']) })).mutation(async ({ ctx, input }) => {
     if ((ctx.user as any).role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });

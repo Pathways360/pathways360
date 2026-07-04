@@ -53,6 +53,9 @@ export default function CalendarPage() {
   const [, navigate] = useLocation();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [rescheduleId, setRescheduleId] = useState<number | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
 
   const { data: appts = [], refetch } = trpc.appointments.list.useQuery();
   const createAppt = trpc.appointments.create.useMutation({
@@ -66,6 +69,10 @@ export default function CalendarPage() {
   });
   const completeAppt = trpc.appointments.complete.useMutation({ onSuccess: () => { refetch(); toast.success("Marked as done! Great job! 🎉"); } });
   const deleteAppt = trpc.appointments.delete.useMutation({ onSuccess: () => { refetch(); toast.success("Removed."); } });
+  const rescheduleAppt = trpc.appointments.reschedule.useMutation({
+    onSuccess: () => { refetch(); setRescheduleId(null); toast.success("Appointment rescheduled!"); },
+    onError: () => toast.error("Failed to reschedule."),
+  });
 
   const upcoming = (appts as any[])
     .filter((a: any) => !a.completed && new Date(a.appointmentDate) >= new Date())
@@ -257,6 +264,13 @@ export default function CalendarPage() {
                             <CheckCircle className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => { setRescheduleId(appt.id); setRescheduleDate(new Date(appt.appointmentDate).toISOString().slice(0,10)); setRescheduleTime(new Date(appt.appointmentDate).toTimeString().slice(0,5)); }}
+                            className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100"
+                            title="Reschedule"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => deleteAppt.mutate({ id: appt.id })}
                             className="w-8 h-8 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20"
                             title="Delete"
@@ -301,6 +315,35 @@ export default function CalendarPage() {
           </div>
         )}
       </div>
+
+      {/* Reschedule Dialog */}
+      {rescheduleId && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl">
+            <h3 className="font-bold text-base mb-4">Reschedule Appointment</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium block mb-1">New Date</label>
+                <input type="date" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)}
+                  className="w-full h-9 border rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              </div>
+              <div>
+                <label className="text-sm font-medium block mb-1">New Time</label>
+                <input type="time" value={rescheduleTime} onChange={e => setRescheduleTime(e.target.value)}
+                  className="w-full h-9 border rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button variant="outline" className="flex-1" onClick={() => setRescheduleId(null)}>Cancel</Button>
+              <Button className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
+                disabled={!rescheduleDate || !rescheduleTime || rescheduleAppt.isPending}
+                onClick={() => rescheduleAppt.mutate({ id: rescheduleId, appointmentDate: new Date(`${rescheduleDate}T${rescheduleTime}`).toISOString() })}>
+                {rescheduleAppt.isPending ? "Saving..." : "Reschedule"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
