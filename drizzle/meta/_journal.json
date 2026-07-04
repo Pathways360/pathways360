@@ -50,6 +50,20 @@
       "when": 1783123147527,
       "tag": "0006_gray_scream",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1783124074494,
+      "tag": "0007_nice_wendell_vaughn",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1783124356599,
+      "tag": "0008_sturdy_alice",
+      "breakpoints": true
     }
   ]
 }

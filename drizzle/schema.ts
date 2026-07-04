@@ -16,7 +16,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "case_manager", "org_admin", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "case_manager", "ecm_worker", "probation_officer", "counselor", "org_admin", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -39,6 +39,21 @@ export const userProfiles = mysqlTable("user_profiles", {
   zipCode: varchar("zipCode", { length: 10 }),
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 50 }),
+  // Extended profile fields
+  emergencyContactName: varchar("emergencyContactName", { length: 100 }),
+  emergencyContactPhone: varchar("emergencyContactPhone", { length: 20 }),
+  emergencyContactRelation: varchar("emergencyContactRelation", { length: 50 }),
+  county: varchar("county", { length: 100 }),
+  housingStatus: varchar("housingStatus", { length: 100 }),
+  isVeteran: boolean("isVeteran").default(false),
+  insuranceType: varchar("insuranceType", { length: 100 }),
+  hasMediCal: boolean("hasMediCal").default(false),
+  onProbationOrParole: boolean("onProbationOrParole").default(false),
+  probationCounty: varchar("probationCounty", { length: 100 }),
+  drugOfChoice: varchar("drugOfChoice", { length: 100 }),
+  sobrietyDate: varchar("sobrietyDate", { length: 20 }),
+  hasTransportation: boolean("hasTransportation").default(false),
+  employmentStatus: varchar("employmentStatus", { length: 100 }),
   // Privacy
   allowCaseManagerAccess: boolean("allowCaseManagerAccess").default(false).notNull(),
   profileComplete: boolean("profileComplete").default(false).notNull(),
@@ -644,3 +659,81 @@ export type CommunityEvent = typeof communityEvents.$inferSelect;
 export type UserServiceArea = typeof userServiceAreas.$inferSelect;
 export type EventEngagement = typeof eventEngagement.$inferSelect;
 export type DailyFeedItem = typeof dailyFeedItems.$inferSelect;
+
+// ─── Favorites & Recently Viewed ─────────────────────────────────────────────
+export const userFavorites = mysqlTable("user_favorites", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  resourceId: int("resourceId").notNull(),
+  resourceType: varchar("resourceType", { length: 50 }).default("county_resource").notNull(),
+  resourceName: varchar("resourceName", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const recentlyViewed = mysqlTable("recently_viewed", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  resourceId: int("resourceId").notNull(),
+  resourceType: varchar("resourceType", { length: 50 }).default("county_resource").notNull(),
+  resourceName: varchar("resourceName", { length: 200 }),
+  viewedAt: timestamp("viewedAt").defaultNow().notNull(),
+});
+
+// ─── User Documents ───────────────────────────────────────────────────────────
+export const userDocuments = mysqlTable("user_documents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  uploadedByUserId: int("uploadedByUserId"),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  fileUrl: text("fileUrl").notNull(),
+  fileSize: int("fileSize"),
+  mimeType: varchar("mimeType", { length: 100 }),
+  documentType: mysqlEnum("documentType", [
+    "government_id", "insurance_card", "court_document", "consent_form",
+    "recovery_plan", "medical_record", "employment_doc", "housing_doc",
+    "probation_doc", "other"
+  ]).default("other").notNull(),
+  description: text("description"),
+  isSharedWithProviders: boolean("isSharedWithProviders").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// ─── Secure Messaging Threads ─────────────────────────────────────────────────
+export const messageThreads = mysqlTable("message_threads", {
+  id: int("id").autoincrement().primaryKey(),
+  subject: varchar("subject", { length: 255 }),
+  createdByUserId: int("createdByUserId").notNull(),
+  lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
+  isArchived: boolean("isArchived").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const threadParticipants = mysqlTable("thread_participants", {
+  id: int("id").autoincrement().primaryKey(),
+  threadId: int("threadId").notNull(),
+  userId: int("userId").notNull(),
+  lastReadAt: timestamp("lastReadAt"),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export const threadMessages = mysqlTable("thread_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  threadId: int("threadId").notNull(),
+  senderUserId: int("senderUserId").notNull(),
+  content: text("content").notNull(),
+  isSystemMessage: boolean("isSystemMessage").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+export const auditLog = mysqlTable("audit_log", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  action: varchar("action", { length: 100 }).notNull(),
+  entityType: varchar("entityType", { length: 100 }),
+  entityId: int("entityId"),
+  details: text("details"),
+  ipAddress: varchar("ipAddress", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});

@@ -196,9 +196,12 @@ export default function Resources() {
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
-  // Try to load from DB, fall back to demo data
-  const { data: dbResources } = trpc.resources.list.useQuery({ category: category === "all" ? undefined : category, zipCode: zipFilter || undefined });
-  const allResources = (dbResources && dbResources.length > 0) ? dbResources.map((r: any) => ({ ...r, lat: parseFloat(r.latitude || "34.0522"), lng: parseFloat(r.longitude || "-118.2437") })) : DEMO_RESOURCES;
+  // Live county resources from DB
+  const { data: countyResourcesData = [] } = trpc.countyResources.list.useQuery({
+    search: search || undefined,
+    category: category === "all" ? undefined : category,
+  });
+  const allResources = (countyResourcesData as any[]).map((r: any) => ({ ...r, lat: parseFloat(r.latitude || "40.5865"), lng: parseFloat(r.longitude || "-122.3917") }));
 
   const filtered = allResources.filter((r: any) => {
     if (category !== "all" && r.category !== category) return false;
@@ -210,10 +213,10 @@ export default function Resources() {
     return true;
   });
 
-  const filteredOrgs = DEMO_ORG_DIRECTORY.filter(o => {
+  const filteredOrgs = (countyResourcesData as any[]).filter((o: any) => {
     if (!orgSearch) return true;
     const s = orgSearch.toLowerCase();
-    return o.name.toLowerCase().includes(s) || o.type.toLowerCase().includes(s) || (o.servicesOffered || "").toLowerCase().includes(s) || (o.county || "").toLowerCase().includes(s);
+    return o.name.toLowerCase().includes(s) || (o.category || "").toLowerCase().includes(s) || (o.description || "").toLowerCase().includes(s) || (o.county || "").toLowerCase().includes(s);
   });
 
   function handleMapReady(map: google.maps.Map) {

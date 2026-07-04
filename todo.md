@@ -157,3 +157,59 @@
 - [x] Dashboard quick actions: Today's Feed + Community Events added
 - [x] Add verified/confidence filter to communityEvents.list and Community Events UI (Verified Only toggle)
 - [x] Add Submit Opportunity dialog inside ProviderPortal.tsx (CalendarPlus button in header)
+
+## Phase 15: MVP Conversion — Make Everything Work
+
+### Auth & Roles
+- [x] 6 roles: client, case_manager, ecm_worker, probation_officer, counselor, admin
+- [x] Role-gated dashboard routing (each role sees their own portal on login)
+- [x] Session timeout (30 min inactivity) with warning modal
+- [x] Complete client onboarding: DOB, phone, emergency contact, housing status, veteran, insurance, Medi-Cal, probation status, drug of choice, sobriety date, transportation, employment status
+
+### Resource Search (fully functional)
+- [x] Live search backed by countyResources DB table
+- [x] Filters: county, category, ECM-eligible, Medi-Cal, free service, keyword search
+- [x] Every result from live DB (no hardcoded arrays)
+- [ ] Advanced filters: open today, walk-in, gender-specific, veterans, language (future enhancement)
+
+### Interactive Map
+- [x] Resource map page at /resource-map with county/category filters and resource list
+- [x] Google Maps directions link (opens native maps app)
+- [x] Save to favorites from map view
+- [ ] GPS user location (requires Maps API key)
+- [ ] Distance calculation and nearest resources sort (requires Maps API key)
+
+### Document Storage
+- [x] Secure S3 upload: ID, insurance card, court docs, consent forms, recovery plans
+- [x] File list with download and delete
+- [x] Role-gated: client sees own docs, providers see client docs with consent
+
+### Secure Messaging
+- [x] Real-time messaging between all 6 roles
+- [x] Conversation threads (not just one-way provider messages)
+- [x] Read receipts, timestamps, role badges
+
+### Provider Portals (fully functional)
+- [x] Case Manager: client list, notes, goals, tasks, case history, referrals, appointments, documents
+- [x] Probation Officer: roster, compliance tracking, meeting history, attendance verification, document uploads
+- [x] Counselor: recovery plans, treatment goals, progress notes, drug testing history, referrals
+- [x] ECM Worker: care plans, social determinants, needs tracking, outcome reporting, insurance verification
+- [x] Admin: user management, org management, resource management, analytics, audit logs, permissions
+
+### Favorites & History
+- [x] Favorite/unfavorite resources
+- [x] Recently viewed resources
+- [ ] Recently searched terms (future enhancement)
+
+### Appointments
+- [ ] Schedule, reschedule, cancel appointments
+- [ ] Appointment reminders (inbox notification)
+- [ ] Provider can schedule on behalf of client
+
+### Analytics Dashboard (Admin)
+- [ ] Daily logins, searches, most requested services, housing/food/treatment requests, county usage, referral success
+
+### Fixes & Polish
+- [ ] Fix all placeholder buttons (show toast "Feature coming soon" removed — replace with real functionality)
+- [ ] Fix console errors
+- [ ] Responsive design verified on mobile

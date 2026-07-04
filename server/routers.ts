@@ -14,7 +14,9 @@ import {
   notificationPreferences, providerMessages,
   clientAgencyEnrollments, sharedProgressNotes, clientGapFlags,
   resourceRecommendations, countyResources, progressMilestones,
-  communityEvents, userServiceAreas, eventEngagement, dailyFeedItems
+  communityEvents, userServiceAreas, eventEngagement, dailyFeedItems,
+  userFavorites, recentlyViewed, userDocuments,
+  messageThreads, threadParticipants, threadMessages, auditLog
 } from "../drizzle/schema";
 import { eq, and, desc, gte, lte, or, like, inArray } from "drizzle-orm";
 
@@ -53,6 +55,20 @@ const profileRouter = router({
       zipCode: z.string().optional(),
       city: z.string().optional(),
       state: z.string().optional(),
+      county: z.string().optional(),
+      emergencyContactName: z.string().optional(),
+      emergencyContactPhone: z.string().optional(),
+      emergencyContactRelation: z.string().optional(),
+      housingStatus: z.string().optional(),
+      isVeteran: z.boolean().optional(),
+      insuranceType: z.string().optional(),
+      hasMediCal: z.boolean().optional(),
+      onProbationOrParole: z.boolean().optional(),
+      probationCounty: z.string().optional(),
+      drugOfChoice: z.string().optional(),
+      sobrietyDate: z.string().optional(),
+      hasTransportation: z.boolean().optional(),
+      employmentStatus: z.string().optional(),
       allowCaseManagerAccess: z.boolean().optional(),
       profileComplete: z.boolean().optional(),
       assessmentComplete: z.boolean().optional(),
@@ -1306,6 +1322,207 @@ const dailyFeedRouter = router({
     }),
 });
 
+// ─── Favorites Router ───────────────────────────────────────────────────────
+const favoritesRouter = router({
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    const favs = await db.select().from(userFavorites).where(eq(userFavorites.userId, ctx.user.id)).orderBy(desc(userFavorites.createdAt));
+    // Enrich with resource data
+    const enriched = await Promise.all(favs.map(async (f) => {
+      const [res] = await db.select().from(countyResources).where(eq(countyResources.id, f.resourceId)).limit(1);
+      return { ...f, resource: res || null };
+    }));
+    return enriched;
+  }),
+  add: protectedProcedure.input(z.object({ resourceId: z.number(), resourceName: z.string().optional() })).mutation(async ({ ctx, input }) => {
+    const db = await requireDb();
+    const [existing] = await db.select().from(userFavorites).where(and(eq(userFavorites.userId, ctx.user.id), eq(userFavorites.resourceId, input.resourceId))).limit(1);
+    if (!existing) {
+      await db.insert(userFavorites).values({ userId: ctx.user.id, resourceId: input.resourceId, resourceName: input.resourceName || null });
+    }
+    return { success: true };
+  }),
+  remove: protectedProcedure.input(z.object({ resourceId: z.number() })).mutation(async ({ ctx, input }) => {
+    const db = await requireDb();
+    await db.delete(userFavorites).where(and(eq(userFavorites.userId, ctx.user.id), eq(userFavorites.resourceId, input.resourceId)));
+    return { success: true };
+  }),
+  recentlyViewed: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    const items = await db.select().from(recentlyViewed).where(eq(recentlyViewed.userId, ctx.user.id)).orderBy(desc(recentlyViewed.viewedAt)).limit(20);
+    const enriched = await Promise.all(items.map(async (item) => {
+      const [res] = await db.select().from(countyResources).where(eq(countyResources.id, item.resourceId)).limit(1);
+      return { ...item, resource: res || null };
+    }));
+    return enriched;
+  }),
+  trackView: protectedProcedure.input(z.object({ resourceId: z.number(), resourceName: z.string().optional() })).mutation(async ({ ctx, input }) => {
+    const db = await requireDb();
+    // Upsert — delete old entry then insert fresh
+    await db.delete(recentlyViewed).where(and(eq(recentlyViewed.userId, ctx.user.id), eq(recentlyViewed.resourceId, input.resourceId)));
+    await db.insert(recentlyViewed).values({ userId: ctx.user.id, resourceId: input.resourceId, resourceName: input.resourceName || null });
+    return { success: true };
+  }),
+});
+
+// ─── Documents Router ─────────────────────────────────────────────────────────
+const documentsRouter = router({
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    return db.select().from(userDocuments).where(eq(userDocuments.userId, ctx.user.id)).orderBy(desc(userDocuments.createdAt));
+  }),
+  upload: protectedProcedure.input(z.object({
+    fileName: z.string(),
+    fileKey: z.string(),
+    fileUrl: z.string(),
+    fileSize: z.number().optional(),
+    mimeType: z.string().optional(),
+    documentType: z.enum(['government_id','insurance_card','court_document','consent_form','recovery_plan','medical_record','employment_doc','housing_doc','probation_doc','other']).optional(),
+    description: z.string().optional(),
+    isSharedWithProviders: z.boolean().optional(),
+  })).mutation(async ({ ctx, input }) => {
+    const db = await requireDb();
+    const [doc] = await db.insert(userDocuments).values({
+      userId: ctx.user.id,
+      uploadedByUserId: ctx.user.id,
+      fileName: input.fileName,
+      fileKey: input.fileKey,
+      fileUrl: input.fileUrl,
+      fileSize: input.fileSize || null,
+      mimeType: input.mimeType || null,
+      documentType: input.documentType || 'other',
+      description: input.description || null,
+      isSharedWithProviders: input.isSharedWithProviders || false,
+    }).$returningId();
+    return { success: true, id: doc.id };
+  }),
+  delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+    const db = await requireDb();
+    await db.delete(userDocuments).where(and(eq(userDocuments.id, input.id), eq(userDocuments.userId, ctx.user.id)));
+    return { success: true };
+  }),
+  updateSharing: protectedProcedure.input(z.object({ id: z.number(), isSharedWithProviders: z.boolean() })).mutation(async ({ ctx, input }) => {
+    const db = await requireDb();
+    await db.update(userDocuments).set({ isSharedWithProviders: input.isSharedWithProviders }).where(and(eq(userDocuments.id, input.id), eq(userDocuments.userId, ctx.user.id)));
+    return { success: true };
+  }),
+  // Provider: get client documents (shared only)
+  getClientDocs: protectedProcedure.input(z.object({ clientId: z.number() })).query(async ({ ctx, input }) => {
+    const db = await requireDb();
+    const providerRoles = ['case_manager','ecm_worker','probation_officer','counselor','org_admin','admin'];
+    if (!providerRoles.includes((ctx.user as any).role)) throw new TRPCError({ code: 'FORBIDDEN' });
+    return db.select().from(userDocuments).where(and(eq(userDocuments.userId, input.clientId), eq(userDocuments.isSharedWithProviders, true))).orderBy(desc(userDocuments.createdAt));
+  }),
+});
+
+// ─── Messaging Router ─────────────────────────────────────────────────────────
+const messagingRouter = router({
+  getThreads: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    const participations = await db.select().from(threadParticipants).where(eq(threadParticipants.userId, ctx.user.id));
+    if (participations.length === 0) return [];
+    const threadIds = participations.map(p => p.threadId);
+    const threads = await db.select().from(messageThreads).where(inArray(messageThreads.id, threadIds)).orderBy(desc(messageThreads.lastMessageAt));
+    // Get last message and unread count for each thread
+    const enriched = await Promise.all(threads.map(async (t) => {
+      const [lastMsg] = await db.select().from(threadMessages).where(eq(threadMessages.threadId, t.id)).orderBy(desc(threadMessages.createdAt)).limit(1);
+      const myParticipation = participations.find(p => p.threadId === t.id);
+      const unreadCount = myParticipation?.lastReadAt
+        ? (await db.select().from(threadMessages).where(and(eq(threadMessages.threadId, t.id), gte(threadMessages.createdAt, myParticipation.lastReadAt)))).length
+        : (await db.select().from(threadMessages).where(eq(threadMessages.threadId, t.id))).length;
+      const participants = await db.select({ userId: threadParticipants.userId }).from(threadParticipants).where(eq(threadParticipants.threadId, t.id));
+      const participantUsers = await Promise.all(participants.map(async (p) => {
+        const [u] = await db.select({ id: users.id, name: users.name, role: users.role }).from(users).where(eq(users.id, p.userId)).limit(1);
+        return u;
+      }));
+      return { ...t, lastMessage: lastMsg || null, unreadCount, participants: participantUsers.filter(Boolean) };
+    }));
+    return enriched;
+  }),
+  getMessages: protectedProcedure.input(z.object({ threadId: z.number() })).query(async ({ ctx, input }) => {
+    const db = await requireDb();
+    // Verify participation
+    const [participation] = await db.select().from(threadParticipants).where(and(eq(threadParticipants.threadId, input.threadId), eq(threadParticipants.userId, ctx.user.id))).limit(1);
+    if (!participation) throw new TRPCError({ code: 'FORBIDDEN' });
+    const messages = await db.select().from(threadMessages).where(eq(threadMessages.threadId, input.threadId)).orderBy(threadMessages.createdAt);
+    const enriched = await Promise.all(messages.map(async (m) => {
+      const [sender] = await db.select({ id: users.id, name: users.name, role: users.role }).from(users).where(eq(users.id, m.senderUserId)).limit(1);
+      return { ...m, sender: sender || null };
+    }));
+    // Mark as read
+    await db.update(threadParticipants).set({ lastReadAt: new Date() }).where(and(eq(threadParticipants.threadId, input.threadId), eq(threadParticipants.userId, ctx.user.id)));
+    return enriched;
+  }),
+  createThread: protectedProcedure.input(z.object({
+    subject: z.string().optional(),
+    participantIds: z.array(z.number()),
+    initialMessage: z.string(),
+  })).mutation(async ({ ctx, input }) => {
+    const db = await requireDb();
+    const [thread] = await db.insert(messageThreads).values({ subject: input.subject || null, createdByUserId: ctx.user.id }).$returningId();
+    const allParticipants = Array.from(new Set([ctx.user.id, ...input.participantIds]));
+    await db.insert(threadParticipants).values(allParticipants.map(uid => ({ threadId: thread.id, userId: uid })));
+    await db.insert(threadMessages).values({ threadId: thread.id, senderUserId: ctx.user.id, content: input.initialMessage });
+    return { success: true, threadId: thread.id };
+  }),
+  sendMessage: protectedProcedure.input(z.object({ threadId: z.number(), content: z.string() })).mutation(async ({ ctx, input }) => {
+    const db = await requireDb();
+    const [participation] = await db.select().from(threadParticipants).where(and(eq(threadParticipants.threadId, input.threadId), eq(threadParticipants.userId, ctx.user.id))).limit(1);
+    if (!participation) throw new TRPCError({ code: 'FORBIDDEN' });
+    await db.insert(threadMessages).values({ threadId: input.threadId, senderUserId: ctx.user.id, content: input.content });
+    await db.update(messageThreads).set({ lastMessageAt: new Date() }).where(eq(messageThreads.id, input.threadId));
+    return { success: true };
+  }),
+  getProviderClients: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    const providerRoles = ['case_manager','ecm_worker','probation_officer','counselor','org_admin','admin'];
+    if (!providerRoles.includes((ctx.user as any).role)) return [];
+    const assignments = await db.select().from(caseManagerAssignments).where(eq(caseManagerAssignments.caseManagerId, ctx.user.id));
+    if (assignments.length === 0) return [];
+    const clientIds = assignments.map(a => a.clientId);
+    const clients = await db.select({ id: users.id, name: users.name, role: users.role }).from(users).where(inArray(users.id, clientIds));
+    return clients;
+  }),
+});
+
+// ─── Admin Router ─────────────────────────────────────────────────────────────
+const adminRouter = router({
+  getStats: protectedProcedure.query(async ({ ctx }) => {
+    if ((ctx.user as any).role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+    const db = await requireDb();
+    const [{ count: totalUsers }] = await db.select({ count: db.$count(users) }).from(users);
+    const [{ count: totalGoals }] = await db.select({ count: db.$count(goals) }).from(goals);
+    const [{ count: totalResources }] = await db.select({ count: db.$count(countyResources) }).from(countyResources);
+    const [{ count: totalEvents }] = await db.select({ count: db.$count(communityEvents) }).from(communityEvents);
+    const recentUsers = await db.select({ id: users.id, name: users.name, role: users.role, createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(10);
+    return { totalUsers, totalGoals, totalResources, totalEvents, recentUsers };
+  }),
+  setUserRole: protectedProcedure.input(z.object({ userId: z.number(), role: z.enum(['user','case_manager','ecm_worker','probation_officer','counselor','org_admin','admin']) })).mutation(async ({ ctx, input }) => {
+    if ((ctx.user as any).role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+    const db = await requireDb();
+    await db.update(users).set({ role: input.role }).where(eq(users.id, input.userId));
+    return { success: true };
+  }),
+  getAllUsers: protectedProcedure.query(async ({ ctx }) => {
+    if ((ctx.user as any).role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+    const db = await requireDb();
+    return db.select({ id: users.id, name: users.name, role: users.role, createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt));
+  }),
+  verifyEvent: protectedProcedure.input(z.object({ eventId: z.number() })).mutation(async ({ ctx, input }) => {
+    const adminRoles = ['admin','org_admin'];
+    if (!adminRoles.includes((ctx.user as any).role)) throw new TRPCError({ code: 'FORBIDDEN' });
+    const db = await requireDb();
+    await db.update(communityEvents).set({ verifiedAt: new Date(), confidenceLevel: 'verified_today' }).where(eq(communityEvents.id, input.eventId));
+    return { success: true };
+  }),
+  getPendingEvents: protectedProcedure.query(async ({ ctx }) => {
+    const adminRoles = ['admin','org_admin'];
+    if (!adminRoles.includes((ctx.user as any).role)) throw new TRPCError({ code: 'FORBIDDEN' });
+    const db = await requireDb();
+    return db.select().from(communityEvents).where(eq(communityEvents.confidenceLevel, 'pending')).orderBy(desc(communityEvents.createdAt));
+  }),
+});
+
 // ─── App Router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -1328,6 +1545,10 @@ export const appRouter = router({
   communityEvents: communityEventsRouter,
   serviceAreas: serviceAreasRouter,
   dailyFeed: dailyFeedRouter,
+  favorites: favoritesRouter,
+  documents: documentsRouter,
+  messaging: messagingRouter,
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;
