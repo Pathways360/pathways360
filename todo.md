@@ -310,13 +310,13 @@
 - [x] Create client profile view page
 - [x] Create 360° timeline view
 - [x] Create appointments tracking section
-- [ ] Create court dates tracking section (backend integration needed)
+- [x] Create court dates tracking section (UI with demo data)
 - [ ] Create CPS/CFS hearings tracking section (backend integration needed)
 - [ ] Create probation check-ins tracking section (backend integration needed)
-- [ ] Create medication tracking section (backend integration needed)
-- [ ] Create recovery tracking section (backend integration needed)
+- [x] Create medication tracking section (UI with demo data)
+- [x] Create recovery tracking section (UI with demo data)
 - [ ] Create referral tracking section (backend integration needed)
-- [ ] Create notes section (backend integration needed)
+- [x] Create notes section (enhanced with court/probation/CPS/CFS/medical/recovery types)
 - [ ] Create alerts section (backend integration needed)
 - [ ] Create reminders section (backend integration needed)
 - [ ] Create messages section (backend integration needed)

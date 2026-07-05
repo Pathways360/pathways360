@@ -9,39 +9,69 @@ interface Note {
   id: number;
   title: string;
   content: string;
-  type: "private" | "shared" | "client_visible";
+  type: "private" | "shared" | "client_visible" | "court" | "probation" | "cps_cfs" | "medical" | "recovery";
   author: string;
   date: string;
   lastModified: string;
+  agency?: string;
+  tags?: string[];
 }
 
 const DEMO_NOTES: Note[] = [
   {
     id: 1,
-    title: "Progress Update - Employment",
-    content: "Client completed job training program and has 3 interviews scheduled for next week. Showing great motivation and commitment.",
-    type: "shared",
-    author: "Sarah Johnson (ECM)",
+    title: "Probation Check-in Notes",
+    content: "Client attended probation check-in on time. Reported stable housing and employment. Passed drug screening. No violations noted. Continue current support plan.",
+    type: "probation",
+    author: "Officer James Wilson",
+    agency: "Butte County Probation",
     date: "2026-07-03",
     lastModified: "2026-07-03",
+    tags: ["probation", "compliance", "positive"]
   },
   {
     id: 2,
-    title: "Mental Health Assessment",
-    content: "Client reports decreased anxiety symptoms. Continuing current medication regimen. Recommend continued therapy sessions.",
-    type: "private",
+    title: "Medical Assessment",
+    content: "Client seen for routine physical. Blood pressure well-controlled. Medication compliance excellent. No acute health concerns. Recommend continued MAT support.",
+    type: "medical",
     author: "Dr. Michael Chen",
-    date: "2026-07-01",
-    lastModified: "2026-07-01",
+    agency: "Butte County Health Services",
+    date: "2026-07-02",
+    lastModified: "2026-07-02",
+    tags: ["health", "medication", "positive"]
   },
   {
     id: 3,
-    title: "Housing Update",
-    content: "Lease signed for new apartment. Move-in date is July 15. Client is excited and stable.",
-    type: "client_visible",
-    author: "Jennifer Martinez (Housing)",
+    title: "Case Manager Update",
+    content: "Client successfully completed job training program. Employer interested in hiring. Discussed housing options for next phase. Client is highly motivated.",
+    type: "shared",
+    author: "Sarah Martinez",
+    agency: "Case Management",
+    date: "2026-07-01",
+    lastModified: "2026-07-01",
+    tags: ["employment", "housing", "milestone"]
+  },
+  {
+    id: 4,
+    title: "Recovery Milestone - 30 Days Sober",
+    content: "Client celebrated 30 days of continuous sobriety. Attended sponsor meeting. Actively participating in recovery community. Mood and engagement significantly improved.",
+    type: "recovery",
+    author: "Recovery Coach",
+    agency: "Recovery Support Services",
+    date: "2026-06-30",
+    lastModified: "2026-06-30",
+    tags: ["recovery", "sobriety", "celebration"]
+  },
+  {
+    id: 5,
+    title: "Private Staff Notes",
+    content: "Client expressed concerns about family relationships. Recommended family counseling. Client agreed to explore options. Monitor for emotional stability.",
+    type: "private",
+    author: "Clinical Counselor",
+    agency: "Mental Health Services",
     date: "2026-06-28",
     lastModified: "2026-06-28",
+    tags: ["mental-health", "family", "confidential"]
   },
 ];
 
@@ -53,8 +83,18 @@ const getNoteTypeIcon = (type: string) => {
       return <Users className="w-4 h-4 text-blue-600" />;
     case "client_visible":
       return <Eye className="w-4 h-4 text-green-600" />;
+    case "court":
+      return "⚖️";
+    case "probation":
+      return "👮";
+    case "cps_cfs":
+      return "👨‍👩‍👧";
+    case "medical":
+      return "🏥";
+    case "recovery":
+      return "🌟";
     default:
-      return null;
+      return "📝";
   }
 };
 
@@ -66,6 +106,16 @@ const getNoteTypeLabel = (type: string) => {
       return "Shared";
     case "client_visible":
       return "Client Visible";
+    case "court":
+      return "Court";
+    case "probation":
+      return "Probation";
+    case "cps_cfs":
+      return "CPS/CFS";
+    case "medical":
+      return "Medical";
+    case "recovery":
+      return "Recovery";
     default:
       return type;
   }
@@ -79,6 +129,16 @@ const getNoteTypeColor = (type: string) => {
       return "bg-blue-100 text-blue-700";
     case "client_visible":
       return "bg-green-100 text-green-700";
+    case "court":
+      return "bg-purple-100 text-purple-700";
+    case "probation":
+      return "bg-orange-100 text-orange-700";
+    case "cps_cfs":
+      return "bg-pink-100 text-pink-700";
+    case "medical":
+      return "bg-cyan-100 text-cyan-700";
+    case "recovery":
+      return "bg-yellow-100 text-yellow-700";
     default:
       return "bg-gray-100 text-gray-700";
   }
@@ -175,6 +235,15 @@ export default function NotesSection({ clientId }: NotesSectionProps) {
                 </div>
 
                 <p className="text-sm text-gray-700 mb-2">{note.content}</p>
+
+                {note.agency && <p className="text-xs text-gray-500 mb-1">Agency: {note.agency}</p>}
+                {note.tags && note.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {note.tags.map((tag, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs bg-gray-50">#{tag}</Badge>
+                    ))}
+                  </div>
+                )}
 
                 <p className="text-xs text-gray-500">Last modified: {note.lastModified}</p>
               </CardContent>
