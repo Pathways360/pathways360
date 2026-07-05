@@ -43,6 +43,10 @@ import LoginChoice from "./pages/LoginChoice";
 import ClientLogin from "./pages/ClientLogin";
 import ProviderLogin from "./pages/ProviderLogin";
 import MultiRoleROIDashboard from "./pages/MultiRoleROIDashboard";
+import ClientSearch from "./pages/ClientSearch";
+import ProviderMessaging from "./pages/ProviderMessaging";
+import ProviderReferrals from "./pages/ProviderReferrals";
+import ProviderAlerts from "./pages/ProviderAlerts";
 
 // ─── Session Timeout (30 min inactivity) ─────────────────────────────────────
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -141,6 +145,10 @@ function Router() {
       <Route path="/notes-management/:clientId" component={(props: any) => <NotesManagement clientId={parseInt(props.params.clientId || '0')} />} />
       <Route path="/roi-dashboard" component={ROIDashboard} />
       <Route path="/multi-role-roi" component={MultiRoleROIDashboard} />
+      <Route path="/client-search" component={() => <ClientSearch />} />
+      <Route path="/provider-messaging" component={ProviderMessaging} />
+      <Route path="/provider-referrals" component={ProviderReferrals} />
+      <Route path="/provider-alerts" component={ProviderAlerts} />
       <Route path="/permission-controls" component={PermissionControls} />
       <Route path="/multi-agency-hub" component={MultiAgencyHub} />
       <Route path="/portal" component={CaseManagerPortal} />

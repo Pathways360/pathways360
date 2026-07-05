@@ -417,12 +417,12 @@
 - [x] Export ROI reports by date range, client, or outcome category
 
 ### Enhanced Provider Dashboard Features
-- [ ] Client search with advanced filters (status, risk level, last contact, assigned provider)
-- [ ] Messaging center with conversation threads (not just one-way messages)
-- [ ] Referral management with status tracking and follow-up reminders
-- [ ] Alert/notification system for clientele (high-risk alerts, missed appointments, compliance issues)
-- [ ] Real-time notification badges on dashboard
-- [ ] Alert history and acknowledgment tracking
+- [x] Client search with advanced filters (status, risk level, last contact, assigned provider)
+- [x] Messaging center with conversation threads (not just one-way messages)
+- [x] Referral management system (send, track, accept/reject referrals)
+- [x] Alert/notification system for clientele (high-risk alerts, missed appointments, compliance issues)
+- [x] Real-time notification badges on dashboard
+- [x] Alert history and acknowledgment tracking
 
 ### Backend Fixes & Optimization
 - [x] Fix remaining TypeScript errors in routers.ts (z.record, db.insert syntax)
