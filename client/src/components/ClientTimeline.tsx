@@ -1,5 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import {
   Calendar, FileText, CheckCircle, AlertCircle, Heart, Briefcase,
   Home, GraduationCap, Users, MessageCircle, Award, Pill, DollarSign
@@ -219,11 +222,47 @@ interface ClientTimelineProps {
 }
 
 export default function ClientTimeline({ clientId, userRole = "client" }: ClientTimelineProps) {
+  const { user } = useAuth();
+  const userRoleToUse = userRole || user?.role || "client";
+  
+  // Fetch timeline from backend
+  const { data: timelineEvents, isLoading, error } = trpc.timeline.getClientTimeline.useQuery(
+    { clientId },
+    { enabled: !!clientId }
+  );
+  
+  // Map backend events to UI format
+  const events = timelineEvents?.map((event: any) => ({
+    id: event.id,
+    date: new Date(event.eventDate).toISOString().split('T')[0],
+    type: event.eventType,
+    title: event.title,
+    description: event.description || '',
+    createdBy: event.createdByRole || 'System',
+    visibleToRoles: event.visibleToRoles ? JSON.parse(event.visibleToRoles) : [],
+  })) || [];
+  
   // Filter events based on user role visibility
-  const visibleEvents = DEMO_TIMELINE.filter(event => 
-    event.visibleToRoles.includes(userRole) || event.visibleToRoles.includes("client")
+  const visibleEvents = (events.length > 0 ? events : DEMO_TIMELINE).filter(event => 
+    event.visibleToRoles.includes(userRoleToUse) || event.visibleToRoles.includes("client")
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner />
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-800 text-sm">Error loading timeline: {error.message}</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-4">
       <div>

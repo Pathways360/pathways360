@@ -246,9 +246,9 @@
 - [x] Design and implement 360° Client Timeline database schema
 - [x] Create timeline view component showing chronological history
 - [x] Add case notes and court date event types to timeline
-- [ ] Implement role-based access control for timeline visibility (backend enforcement needed - UI filtering only)
-- [ ] Integrate timeline into client/shared profile view (needs routing and component integration)
-- [ ] Wire ClientTimeline to live timeline data instead of mock events (backend tRPC integration needed)
+- [x] Implement role-based access control for timeline visibility (backend enforcement in timeline router + UI filtering)
+- [x] Integrate timeline into client/shared profile view (ClientTimeline component with role-based filtering)
+- [x] Wire ClientTimeline to live timeline data instead of mock events (tRPC integration with fallback to demo data)
 
 ## Phase 20: Expand Provider Dashboard Fields
 - [x] Add Insurance section (provider, ID, case manager, auth number, renewal date, coverage status)
