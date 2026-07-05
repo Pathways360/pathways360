@@ -1671,51 +1671,48 @@ const adminRouter = router({
   }),
 });
 
-// ─── App Router ───────────────────────────────────────────────────────────────
-// ─── 360° Client Timeline Router ──────────────────────────────────────────────
-const timelineRouter = router({
-  getClientTimeline: protectedProcedure
-    .input(z.object({ clientId: z.number() }))
-    .query(async ({ ctx, input }) => {
+// ─── Search Router ────────────────────────────────────────────────────────────
+const searchRouter = router({
+  // Advanced search across clients, resources, providers
+  search: publicProcedure
+    .input(z.object({
+      query: z.string().optional(),
+      type: z.enum(['clients', 'resources', 'providers', 'events']).optional(),
+      filters: z.record(z.any()).optional(),
+    }))
+    .query(async ({ input }) => {
       const db = await requireDb();
-      // Check permissions
-      const [permission] = await db.select().from(providerPermissions)
-        .where(and(
-          eq(providerPermissions.providerId, ctx.user.id),
-          eq(providerPermissions.clientId, input.clientId)
-        )).limit(1);
-      if (!permission?.consentGiven) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "No access to this client's timeline" });
+      const results: any[] = [];
+      
+      if (!input.type || input.type === 'resources') {
+        const resourceResults = await db.select().from(resources)
+          .where(input.query ? like(resources.name, `%${input.query}%`) : undefined)
+          .limit(20);
+        results.push(...resourceResults.map((r: any) => ({ type: 'resource', ...r })));
       }
-      const events = await db.select().from(clientTimeline)
-        .where(eq(clientTimeline.clientUserId, input.clientId))
-        .orderBy(desc(clientTimeline.eventDate));
-      return events;
+      
+      if (!input.type || input.type === 'providers') {
+        const providers = await db.select().from(users)
+          .where(input.query ? like(users.name, `%${input.query}%`) : undefined)
+          .limit(20);
+        results.push(...providers.map(p => ({ type: 'provider', ...p })));
+      }
+      
+      return results;
     }),
 
-  addTimelineEvent: protectedProcedure
+  // Save search
+  saveSearch: protectedProcedure
     .input(z.object({
-      clientId: z.number(),
-      eventType: z.enum(["appointment", "case_note", "milestone", "medication_change", "court_date", "referral", "housing_update", "employment_progress", "message", "assessment", "goal_update", "recovery_milestone", "provider_note"]),
-      title: z.string(),
-      description: z.string().optional(),
-      eventDate: z.date(),
-      visibleToRoles: z.array(z.string()).optional(),
-      metadata: z.record(z.string(), z.any()).optional(),
+      name: z.string(),
+      searchType: z.enum(['clients', 'resources', 'providers', 'events']),
+      filters: z.record(z.string(), z.any()),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
-      await db.insert(clientTimeline).values({
-        clientUserId: input.clientId,
-        eventType: input.eventType,
-        title: input.title,
-        description: input.description,
-        eventDate: input.eventDate,
-        createdByUserId: ctx.user.id,
-        createdByRole: ctx.user.role,
-        visibleToRoles: JSON.stringify(input.visibleToRoles || []),
-        metadata: JSON.stringify(input.metadata || {}),
-        consentGiven: true,
+      const result = await db.insert(savedSearches).values({
+        userId: ctx.user.id,
+        ...input,
       });
       return { success: true };
     }),
@@ -1961,48 +1958,51 @@ export const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-// ─── Search Router ────────────────────────────────────────────────────────────
-const searchRouter = router({
-  // Advanced search across clients, resources, providers
-  search: publicProcedure
-    .input(z.object({
-      query: z.string().optional(),
-      type: z.enum(['clients', 'resources', 'providers', 'events']).optional(),
-      filters: z.record(z.any()).optional(),
-    }))
-    .query(async ({ input }) => {
+// ─── App Router ───────────────────────────────────────────────────────────────
+// ─── 360° Client Timeline Router ──────────────────────────────────────────────
+const timelineRouter = router({
+  getClientTimeline: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
       const db = await requireDb();
-      const results: any[] = [];
-      
-      if (!input.type || input.type === 'resources') {
-        const resourceResults = await db.select().from(resources)
-          .where(input.query ? like(resources.name, `%${input.query}%`) : undefined)
-          .limit(20);
-        results.push(...resourceResults.map((r: any) => ({ type: 'resource', ...r })));
+      // Check permissions
+      const [permission] = await db.select().from(providerPermissions)
+        .where(and(
+          eq(providerPermissions.providerId, ctx.user.id),
+          eq(providerPermissions.clientId, input.clientId)
+        )).limit(1);
+      if (!permission?.consentGiven) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "No access to this client's timeline" });
       }
-      
-      if (!input.type || input.type === 'providers') {
-        const providers = await db.select().from(users)
-          .where(input.query ? like(users.name, `%${input.query}%`) : undefined)
-          .limit(20);
-        results.push(...providers.map(p => ({ type: 'provider', ...p })));
-      }
-      
-      return results;
+      const events = await db.select().from(clientTimeline)
+        .where(eq(clientTimeline.clientUserId, input.clientId))
+        .orderBy(desc(clientTimeline.eventDate));
+      return events;
     }),
 
-  // Save search
-  saveSearch: protectedProcedure
+  addTimelineEvent: protectedProcedure
     .input(z.object({
-      name: z.string(),
-      searchType: z.enum(['clients', 'resources', 'providers', 'events']),
-      filters: z.record(z.string(), z.any()),
+      clientId: z.number(),
+      eventType: z.enum(["appointment", "case_note", "milestone", "medication_change", "court_date", "referral", "housing_update", "employment_progress", "message", "assessment", "goal_update", "recovery_milestone", "provider_note"]),
+      title: z.string(),
+      description: z.string().optional(),
+      eventDate: z.date(),
+      visibleToRoles: z.array(z.string()).optional(),
+      metadata: z.record(z.string(), z.any()).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
-      const result = await db.insert(savedSearches).values({
-        userId: ctx.user.id,
-        ...input,
+      await db.insert(clientTimeline).values({
+        clientUserId: input.clientId,
+        eventType: input.eventType,
+        title: input.title,
+        description: input.description,
+        eventDate: input.eventDate,
+        createdByUserId: ctx.user.id,
+        createdByRole: ctx.user.role,
+        visibleToRoles: JSON.stringify(input.visibleToRoles || []),
+        metadata: JSON.stringify(input.metadata || {}),
+        consentGiven: true,
       });
       return { id: result[0], ...input };
     }),

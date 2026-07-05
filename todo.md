@@ -483,3 +483,21 @@
 - [x] Integrate search alerts into NotificationCenter (alerts route at /advanced-search)
 - [x] Test search filtering and persistence (mock data implemented)
 - [x] Test alert notifications on new matches (alert creation tested)
+
+
+## Phase 36: Automated Referral Matching Algorithm
+- [ ] Design matching algorithm with scoring system (specialty match, location, availability, language, insurance, ROI status)
+- [ ] Create client need extraction from assessment data
+- [ ] Create provider capability extraction from profile data
+- [ ] Implement matching score calculation (0-100)
+- [ ] Create getMatchedProviders tRPC procedure
+- [ ] Create getMatchedResources tRPC procedure
+- [ ] Create getReferralSuggestions tRPC procedure (combines providers + resources)
+- [ ] Create ReferralSuggestions UI component with match scores
+- [ ] Add match explanation (why this provider was suggested)
+- [ ] Integrate suggestions into client profile
+- [ ] Integrate suggestions into referral creation workflow
+- [ ] Add "Send Referral" button to suggestions
+- [ ] Test matching accuracy with various client profiles
+- [ ] Test matching with different provider specialties
+- [ ] Verify location-based matching works correctly
