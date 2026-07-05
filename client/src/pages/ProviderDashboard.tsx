@@ -6,6 +6,12 @@ import ClientList from "@/components/ClientList";
 import ClientProfile from "@/components/ClientProfile";
 import ClientTimeline from "@/components/ClientTimeline";
 import AppointmentsTracker from "@/components/AppointmentsTracker";
+import MedicationTracker from "@/components/MedicationTracker";
+import RecoveryTracker from "@/components/RecoveryTracker";
+import NotesSection from "@/components/NotesSection";
+import ReferralTracker from "@/components/ReferralTracker";
+import AlertsReminders from "@/components/AlertsReminders";
+import MessagingCenter from "@/components/MessagingCenter";
 import { ArrowLeft, Users, Calendar, Target, TrendingUp } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -93,10 +99,13 @@ export default function ProviderDashboard() {
             </Button>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="profile">Profile</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="appointments">Appointments</TabsTrigger>
+                <TabsTrigger value="medications">Medications</TabsTrigger>
+                <TabsTrigger value="recovery">Recovery</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
               </TabsList>
 
               <TabsContent value="profile" className="mt-6">
@@ -110,7 +119,27 @@ export default function ProviderDashboard() {
               <TabsContent value="appointments" className="mt-6">
                 <AppointmentsTracker clientId={selectedClientId} />
               </TabsContent>
+
+              <TabsContent value="medications" className="mt-6">
+                <MedicationTracker clientId={selectedClientId} />
+              </TabsContent>
+
+              <TabsContent value="recovery" className="mt-6">
+                <RecoveryTracker clientId={selectedClientId} />
+              </TabsContent>
+
+              <TabsContent value="notes" className="mt-6">
+                <NotesSection clientId={selectedClientId} />
+              </TabsContent>
             </Tabs>
+
+            {/* Additional Tracking Sections */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <ReferralTracker clientId={selectedClientId} />
+              <AlertsReminders clientId={selectedClientId} />
+            </div>
+
+            <MessagingCenter clientId={selectedClientId} />
           </div>
         ) : (
           // Client List View
