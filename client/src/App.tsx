@@ -49,6 +49,7 @@ import ProviderReferrals from "./pages/ProviderReferrals";
 import ProviderAlerts from "./pages/ProviderAlerts";
 import { NotificationCenter } from "./components/NotificationCenter";
 import { NotificationPreferences } from "./pages/NotificationPreferences";
+import { AdvancedSearch } from "./pages/AdvancedSearch";
 
 // ─── Session Timeout (30 min inactivity) ─────────────────────────────────────
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -167,6 +168,7 @@ function Router() {
       <Route path="/community-events" component={CommunityEvents} />
       <Route path="/profile" component={Profile} />
       <Route path="/notification-preferences" component={NotificationPreferences} />
+      <Route path="/advanced-search" component={AdvancedSearch} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

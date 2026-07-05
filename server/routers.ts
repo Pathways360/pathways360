@@ -20,7 +20,9 @@ import {
   clientTimeline, clientInsurance, clientMedications, clientEmployment,
   clientHousing, clientCourt, clientChildWelfare, clientBehavioralHealth,
   clientMedical, clientRecovery, clientEducation, providerPermissions,
-  multiAgencyOutcomes
+  multiAgencyOutcomes,
+  savedSearches,
+  searchAlerts,
 } from "../drizzle/schema";
 import { eq, and, desc, gte, lte, or, like, inArray } from "drizzle-orm";
 
@@ -1954,6 +1956,112 @@ export const appRouter = router({
   permissions: permissionsRouter,
   outcomes: multiAgencyOutcomesRouter,
   clientProfile: clientProfileRouter,
+  search: searchRouter,
 });
 
 export type AppRouter = typeof appRouter;
+
+// ─── Search Router ────────────────────────────────────────────────────────────
+const searchRouter = router({
+  // Advanced search across clients, resources, providers
+  search: publicProcedure
+    .input(z.object({
+      query: z.string().optional(),
+      type: z.enum(['clients', 'resources', 'providers', 'events']).optional(),
+      filters: z.record(z.any()).optional(),
+    }))
+    .query(async ({ input }) => {
+      const db = await requireDb();
+      const results: any[] = [];
+      
+      if (!input.type || input.type === 'resources') {
+        const resourceResults = await db.select().from(resources)
+          .where(input.query ? like(resources.name, `%${input.query}%`) : undefined)
+          .limit(20);
+        results.push(...resourceResults.map((r: any) => ({ type: 'resource', ...r })));
+      }
+      
+      if (!input.type || input.type === 'providers') {
+        const providers = await db.select().from(users)
+          .where(input.query ? like(users.name, `%${input.query}%`) : undefined)
+          .limit(20);
+        results.push(...providers.map(p => ({ type: 'provider', ...p })));
+      }
+      
+      return results;
+    }),
+
+  // Save search
+  saveSearch: protectedProcedure
+    .input(z.object({
+      name: z.string(),
+      searchType: z.enum(['clients', 'resources', 'providers', 'events']),
+      filters: z.record(z.string(), z.any()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const result = await db.insert(savedSearches).values({
+        userId: ctx.user.id,
+        ...input,
+      });
+      return { id: result[0], ...input };
+    }),
+
+  // Get saved searches
+  getSavedSearches: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    return db.select().from(savedSearches)
+      .where(eq(savedSearches.userId, ctx.user.id))
+      .orderBy(desc(savedSearches.createdAt));
+  }),
+
+  // Delete saved search
+  deleteSavedSearch: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      await db.delete(savedSearches)
+        .where(and(
+          eq(savedSearches.id, input.id),
+          eq(savedSearches.userId, ctx.user.id)
+        ));
+      return { success: true };
+    }),
+
+  // Create search alert
+  createAlert: protectedProcedure
+    .input(z.object({
+      savedSearchId: z.number(),
+      name: z.string(),
+      frequency: z.enum(['immediate', 'daily', 'weekly']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const result = await db.insert(searchAlerts).values({
+        userId: ctx.user.id,
+        ...input,
+      });
+      return { id: result[0], ...input };
+    }),
+
+  // Get search alerts
+  getAlerts: protectedProcedure.query(async ({ ctx }) => {
+    const db = await requireDb();
+    return db.select().from(searchAlerts)
+      .where(eq(searchAlerts.userId, ctx.user.id))
+      .orderBy(desc(searchAlerts.createdAt));
+  }),
+
+  // Delete search alert
+  deleteAlert: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      await db.delete(searchAlerts)
+        .where(and(
+          eq(searchAlerts.id, input.id),
+          eq(searchAlerts.userId, ctx.user.id)
+        ));
+      return { success: true };
+    }),
+});

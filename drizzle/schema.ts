@@ -1178,3 +1178,35 @@ export type ProviderProfile = typeof providerProfiles.$inferSelect;
 export type InsertProviderProfile = typeof providerProfiles.$inferInsert;
 
 
+
+
+// ─── Saved Searches ───────────────────────────────────────────────────────────
+export const savedSearches = mysqlTable("saved_searches", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  searchType: mysqlEnum("searchType", ["clients", "resources", "providers", "events"]).notNull(),
+  filters: json("filters").notNull(), // JSON object with filter criteria
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SavedSearch = typeof savedSearches.$inferSelect;
+export type InsertSavedSearch = typeof savedSearches.$inferInsert;
+
+// ─── Search Alerts ────────────────────────────────────────────────────────────
+export const searchAlerts = mysqlTable("search_alerts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  savedSearchId: int("savedSearchId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  frequency: mysqlEnum("frequency", ["immediate", "daily", "weekly"]).default("immediate").notNull(),
+  lastAlertSentAt: timestamp("lastAlertSentAt"),
+  matchCount: int("matchCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SearchAlert = typeof searchAlerts.$inferSelect;
+export type InsertSearchAlert = typeof searchAlerts.$inferInsert;

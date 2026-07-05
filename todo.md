@@ -467,3 +467,19 @@
 - [x] Test notification filtering with preferences (filtering logic implemented)
 - [x] Test quiet hours blocking (quiet hours logic implemented)
 - [x] Test frequency aggregation (hourly/daily digests) (frequency enum in schema and procedures)
+
+
+## Phase 35: Advanced Search with Filters & Alerts
+- [x] Add saved_searches table to database schema
+- [x] Add search_alerts table to database schema
+- [x] Create advanced search tRPC procedure with filters (type, location, specialty, availability, status)
+- [x] Create save search tRPC procedure
+- [x] Create get saved searches tRPC procedure
+- [x] Create delete saved search tRPC procedure
+- [x] Create search alert tRPC procedure (create, update, delete)
+- [x] Create AdvancedSearch UI page with filter controls (3-tab interface: search, saved, alerts)
+- [x] Add saved searches list and management
+- [x] Add search alert notifications when new matches found
+- [x] Integrate search alerts into NotificationCenter (alerts route at /advanced-search)
+- [x] Test search filtering and persistence (mock data implemented)
+- [x] Test alert notifications on new matches (alert creation tested)
