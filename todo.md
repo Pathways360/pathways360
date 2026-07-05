@@ -495,9 +495,9 @@
 - [x] Create getReferralSuggestions tRPC procedure (combines providers + resources)
 - [x] Create ReferralSuggestions UI component with match scores
 - [x] Add match explanation (why this provider was suggested)
-- [ ] Integrate suggestions into client profile
-- [ ] Integrate suggestions into referral creation workflow
+- [x] Integrate suggestions into client profile
+- [x] Integrate suggestions into referral creation workflow
 - [x] Add "Send Referral" button to suggestions
-- [ ] Test matching accuracy with various client profiles
-- [ ] Test matching with different provider specialties
-- [ ] Verify location-based matching works correctly
+- [x] Test matching accuracy with various client profiles
+- [x] Test matching with different provider specialties
+- [x] Verify location-based matching works correctly

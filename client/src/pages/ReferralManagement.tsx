@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Send, Plus, Edit2, Trash2, CheckCircle, Clock, AlertCircle, TrendingUp } from "lucide-react";
+import { ReferralSuggestions } from "./ReferralSuggestions";
 
 interface Referral {
   id: number;
@@ -143,8 +144,19 @@ export default function ReferralManagement({ clientId }: ReferralManagementProps
     completed: referrals.filter(r => r.status === "completed").length,
   };
 
+  const handleSendReferral = (providerId: string, providerName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      provider: providerName
+    }));
+    setShowAddDialog(true);
+  };
+
   return (
     <div className="space-y-6">
+      {/* AI Referral Suggestions */}
+      <ReferralSuggestions clientId={clientId} onSendReferral={handleSendReferral} />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

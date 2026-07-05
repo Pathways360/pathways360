@@ -13,6 +13,7 @@ import {
   Building2, ChevronLeft, Plus, Send, Shield, Lightbulb, X
 } from "lucide-react";
 import { Link } from "wouter";
+import { ReferralSuggestions } from "./ReferralSuggestions";
 
 // ─── Gap flag labels ──────────────────────────────────────────────────────────
 const GAP_LABELS: Record<string, string> = {
@@ -265,13 +266,14 @@ export default function SharedClientProfile({ clientId, onBack }: Props) {
 
       {/* Main Tabs */}
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="notes">
             Cross-Agency Notes
             {notes.length > 0 && <span className="ml-1.5 bg-teal-100 text-teal-700 text-xs px-1.5 py-0.5 rounded-full">{notes.length}</span>}
           </TabsTrigger>
           <TabsTrigger value="goals">Goals & Milestones</TabsTrigger>
+          <TabsTrigger value="referrals">Referral Suggestions</TabsTrigger>
           <TabsTrigger value="agencies">
             Agencies
             <span className="ml-1.5 bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded-full">{enrollments.length}</span>
@@ -518,6 +520,11 @@ export default function SharedClientProfile({ clientId, onBack }: Props) {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        {/* REFERRAL SUGGESTIONS TAB */}
+        <TabsContent value="referrals" className="space-y-4 mt-4">
+          <ReferralSuggestions clientId={clientId} />
         </TabsContent>
       </Tabs>
     </div>
