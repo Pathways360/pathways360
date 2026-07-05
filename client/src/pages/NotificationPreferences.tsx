@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { trpc } from '@/lib/trpc';
+import { Spinner } from '@/components/ui/spinner';
 
 export function NotificationPreferences() {
   const [loading, setLoading] = useState(false);
@@ -28,11 +30,26 @@ export function NotificationPreferences() {
     browserNotificationsEnabled: false,
   });
 
+  const { data: savedPreferences, isLoading: isLoadingPreferences } = trpc.notifications.getPreferences.useQuery();
+  const updatePreferencesMutation = trpc.notifications.updatePreferences.useMutation();
+
   useEffect(() => {
-    // Load preferences from backend
-    // const prefs = await trpc.notifications.get.query();
-    // setPreferences(prefs || preferences);
-  }, []);
+    if (savedPreferences) {
+      setPreferences({
+        alertsEnabled: savedPreferences.alertsEnabled ?? true,
+        messagesEnabled: savedPreferences.messagesEnabled ?? true,
+        referralsEnabled: savedPreferences.referralsEnabled ?? true,
+        appointmentsEnabled: savedPreferences.appointmentsEnabled ?? true,
+        remindersEnabled: savedPreferences.remindersEnabled ?? true,
+        frequency: (savedPreferences.frequency as 'immediate' | 'hourly_digest' | 'daily_digest') || 'immediate',
+        quietHoursEnabled: savedPreferences.quietHoursEnabled ?? false,
+        quietHoursStart: savedPreferences.quietHoursStart || '22:00',
+        quietHoursEnd: savedPreferences.quietHoursEnd || '08:00',
+        soundEnabled: savedPreferences.soundEnabled ?? true,
+        browserNotificationsEnabled: savedPreferences.browserNotificationsEnabled ?? false,
+      });
+    }
+  }, [savedPreferences]);
 
   const handleToggle = (key: string) => {
     setPreferences(prev => ({ ...prev, [key]: !prev[key as keyof typeof preferences] }));
@@ -49,14 +66,43 @@ export function NotificationPreferences() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      // await trpc.notifications.upsert.mutate(preferences);
-      toast.success('Preferences saved');
+      await updatePreferencesMutation.mutateAsync({
+        appointmentReminders: preferences.appointmentsEnabled,
+        medicationReminders: preferences.remindersEnabled,
+        goalReminders: preferences.remindersEnabled,
+        dailyCoachMessage: true,
+        weeklyProgressSummary: true,
+        devotionals: false,
+        motivationalMessages: true,
+        crisisAlerts: true,
+        alertsEnabled: preferences.alertsEnabled,
+        messagesEnabled: preferences.messagesEnabled,
+        referralsEnabled: preferences.referralsEnabled,
+        appointmentsEnabled: preferences.appointmentsEnabled,
+        remindersEnabled: preferences.remindersEnabled,
+        frequency: preferences.frequency,
+        quietHoursEnabled: preferences.quietHoursEnabled,
+        quietHoursStart: preferences.quietHoursStart,
+        quietHoursEnd: preferences.quietHoursEnd,
+        soundEnabled: preferences.soundEnabled,
+        browserNotificationsEnabled: preferences.browserNotificationsEnabled,
+      });
+      toast.success('Preferences saved successfully');
     } catch (error) {
+      console.error('Error saving preferences:', error);
       toast.error('Failed to save preferences');
     } finally {
       setLoading(false);
     }
   };
+
+  if (isLoadingPreferences) {
+    return (
+      <div className="container max-w-2xl py-8 flex items-center justify-center min-h-screen">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-2xl py-8">
@@ -241,8 +287,15 @@ export function NotificationPreferences() {
       </Tabs>
 
       <div className="mt-6 flex gap-2">
-        <Button onClick={handleSave} disabled={loading}>
-          {loading ? 'Saving...' : 'Save Preferences'}
+        <Button onClick={handleSave} disabled={loading || updatePreferencesMutation.isPending} className="gap-2">
+          {loading || updatePreferencesMutation.isPending ? (
+            <>
+              <Spinner className="h-4 w-4" />
+              Saving...
+            </>
+          ) : (
+            'Save Preferences'
+          )}
         </Button>
         <Button variant="outline" onClick={() => window.history.back()}>
           Cancel

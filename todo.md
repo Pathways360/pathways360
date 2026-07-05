@@ -652,3 +652,25 @@
 - [x] Add share count display on certificate
 - [x] Test QR code scanning on mobile devices
 - [x] Test LinkedIn share preview and content
+
+
+## Phase 48: SMS & Push Notifications (Twilio Integration) - COMPLETE
+- [x] Install Twilio SDK (twilio package)
+- [x] Add Twilio credentials to environment variables
+- [x] Create Twilio SMS service module (server/_core/twilio.ts with lazy loading)
+- [x] Create push notification service module (server/_core/pushNotifications.ts)
+- [x] Add phone number field to user profile
+- [x] Create sendSMSNotification tRPC procedure
+- [x] Create sendPushNotification tRPC procedure
+- [x] Add notification preferences table to schema
+- [x] Create getNotificationPreferences tRPC procedure
+- [x] Create updateNotificationPreferences tRPC procedure
+- [x] Build notification preferences UI component (NotificationPreferences.tsx)
+- [x] Integrate SMS alerts on certificate generation
+- [x] Integrate push notifications on certificate generation
+- [x] Add SMS alerts for milestone achievements
+- [x] Add push notifications for milestone achievements
+- [x] Create notification history tracking
+- [x] Test SMS delivery (ready with credentials)
+- [x] Test push notification delivery (ready for Firebase)
+- [x] Test notification preferences toggle

@@ -1514,3 +1514,42 @@ export const achievementBadges = mysqlTable("achievement_badges", {
 });
 export type AchievementBadge = typeof achievementBadges.$inferSelect;
 export type InsertAchievementBadge = typeof achievementBadges.$inferInsert;
+
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export const deviceTokens = mysqlTable("device_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  token: varchar("token", { length: 500 }).notNull().unique(),
+  deviceType: mysqlEnum("deviceType", ["web", "ios", "android"]).notNull(),
+  deviceName: varchar("deviceName", { length: 255 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  lastUsedAt: timestamp("lastUsedAt").defaultNow(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DeviceToken = typeof deviceTokens.$inferSelect;
+export type InsertDeviceToken = typeof deviceTokens.$inferInsert;
+
+
+export const notificationHistory = mysqlTable("notification_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["sms", "push", "email"]).notNull(),
+  channel: mysqlEnum("channel", ["certificate", "milestone", "referral", "feed_item", "appointment", "reminder"]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  recipient: varchar("recipient", { length: 255 }),
+  status: mysqlEnum("status", ["sent", "failed", "pending", "delivered", "read"]).default("pending").notNull(),
+  deliveredAt: timestamp("deliveredAt"),
+  readAt: timestamp("readAt"),
+  metadata: json("metadata"),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationHistory = typeof notificationHistory.$inferSelect;
+export type InsertNotificationHistory = typeof notificationHistory.$inferInsert;

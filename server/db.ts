@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, jobPostings, jobApplications, recommendations, feedItems, feedInteractions, serviceProviders, serviceSchedules, biDirectionalReferrals, achievements, certificates, certificateTemplates, achievementBadges, goals } from "../drizzle/schema";
+import { InsertUser, users, jobPostings, jobApplications, recommendations, feedItems, feedInteractions, serviceProviders, serviceSchedules, biDirectionalReferrals, achievements, certificates, certificateTemplates, achievementBadges, goals, notificationPreferences, notificationHistory, deviceTokens, InsertNotificationPreferences, InsertNotificationHistory } from "../drizzle/schema";
 import { desc, eq, and, sql } from "drizzle-orm";
 import { ENV } from './_core/env';
 
@@ -485,4 +485,81 @@ export async function getClientBadges(clientId: number) {
     .from(achievementBadges)
     .where(eq(achievementBadges.clientId, clientId))
     .orderBy(desc(achievementBadges.unlockedAt));
+}
+
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+export async function getNotificationPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(notificationPreferences).where(eq(notificationPreferences.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createNotificationPreferences(data: InsertNotificationPreferences) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(notificationPreferences).values(data);
+  return result;
+}
+
+export async function updateNotificationPreferences(userId: number, data: Partial<InsertNotificationPreferences>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(notificationPreferences).set(data).where(eq(notificationPreferences.userId, userId));
+}
+
+export async function recordNotificationHistory(data: InsertNotificationHistory) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(notificationHistory).values(data);
+  return result;
+}
+
+export async function getNotificationHistory(userId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(notificationHistory)
+    .where(eq(notificationHistory.userId, userId))
+    .orderBy(desc(notificationHistory.createdAt))
+    .limit(limit);
+}
+
+export async function registerDeviceToken(userId: number, token: string, deviceType: "web" | "ios" | "android", deviceName?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const result = await db.insert(deviceTokens).values({
+      userId,
+      token,
+      deviceType,
+      deviceName,
+      isActive: true,
+    });
+    return result;
+  } catch (error) {
+    // Token might already exist, try to update it
+    return db.update(deviceTokens).set({ isActive: true, lastUsedAt: new Date() }).where(eq(deviceTokens.token, token));
+  }
+}
+
+export async function getDeviceTokens(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(deviceTokens)
+    .where(and(eq(deviceTokens.userId, userId), eq(deviceTokens.isActive, true)));
+}
+
+export async function deactivateDeviceToken(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(deviceTokens).set({ isActive: false }).where(eq(deviceTokens.token, token));
 }

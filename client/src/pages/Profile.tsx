@@ -112,7 +112,7 @@ export default function Profile() {
 
   // ── Profile state ─────────────────────────────────────────────────────────
   const { data: profile, isLoading: profileLoading } = trpc.profile.get.useQuery();
-  const { data: notifPrefs, isLoading: notifLoading } = trpc.notifications.get.useQuery();
+  const { data: notifPrefs, isLoading: notifLoading } = trpc.notifications.getPreferences.useQuery();
 
   const [profileForm, setProfileForm] = useState({
     firstName: "",
@@ -191,9 +191,9 @@ export default function Profile() {
     onError: () => toast.error("Failed to save profile. Please try again."),
   });
 
-  const updateNotifs = trpc.notifications.upsert.useMutation({
+  const updateNotifs = trpc.notifications.updatePreferences.useMutation({
     onSuccess: () => {
-      utils.notifications.get.invalidate();
+      utils.notifications.getPreferences.invalidate();
       toast.success("Notification preferences saved!");
     },
     onError: () => toast.error("Failed to save preferences. Please try again."),

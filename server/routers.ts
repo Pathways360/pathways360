@@ -4,6 +4,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { achievementsRouter } from "./routers/achievements";
 import { certificateVerificationRouter } from "./routers/certificateVerification";
+import { notificationsRouter } from "./routers/notifications";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
@@ -827,50 +828,7 @@ const caseManagerRouter = router({
     }),
 });
 
-// ─── Notifications Router ───────────────────────────────────────────────────
-const notificationsRouter = router({
-  get: protectedProcedure.query(async ({ ctx }) => {
-    const db = await requireDb();
-    const [prefs] = await db.select().from(notificationPreferences)
-      .where(eq(notificationPreferences.userId, ctx.user.id)).limit(1);
-    return prefs || null;
-  }),
-  upsert: protectedProcedure
-    .input(z.object({
-      appointmentReminders: z.boolean().optional(),
-      medicationReminders: z.boolean().optional(),
-      goalReminders: z.boolean().optional(),
-      dailyCoachMessage: z.boolean().optional(),
-      weeklyProgressSummary: z.boolean().optional(),
-      devotionals: z.boolean().optional(),
-      motivationalMessages: z.boolean().optional(),
-      crisisAlerts: z.boolean().optional(),
-      reminderLeadMinutes: z.number().optional(),
-      quietHoursStart: z.string().optional(),
-      quietHoursEnd: z.string().optional(),
-      alertsEnabled: z.boolean().optional(),
-      messagesEnabled: z.boolean().optional(),
-      referralsEnabled: z.boolean().optional(),
-      appointmentsEnabled: z.boolean().optional(),
-      remindersEnabled: z.boolean().optional(),
-      frequency: z.enum(['immediate', 'hourly_digest', 'daily_digest']).optional(),
-      quietHoursEnabled: z.boolean().optional(),
-      soundEnabled: z.boolean().optional(),
-      browserNotificationsEnabled: z.boolean().optional(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const db = await requireDb();
-      const [existing] = await db.select().from(notificationPreferences)
-        .where(eq(notificationPreferences.userId, ctx.user.id)).limit(1);
-      if (existing) {
-        await db.update(notificationPreferences).set(input)
-          .where(eq(notificationPreferences.userId, ctx.user.id));
-      } else {
-        await db.insert(notificationPreferences).values({ userId: ctx.user.id, ...input });
-      }
-      return { success: true };
-    }),
-});
+// ─── Notifications Router (imported from ./routers/notifications) ────────────
 
 
 // ─── Provider Messages Router ─────────────────────────────────────────────────
