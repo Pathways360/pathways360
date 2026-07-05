@@ -486,18 +486,18 @@
 
 
 ## Phase 36: Automated Referral Matching Algorithm
-- [ ] Design matching algorithm with scoring system (specialty match, location, availability, language, insurance, ROI status)
-- [ ] Create client need extraction from assessment data
-- [ ] Create provider capability extraction from profile data
-- [ ] Implement matching score calculation (0-100)
-- [ ] Create getMatchedProviders tRPC procedure
-- [ ] Create getMatchedResources tRPC procedure
-- [ ] Create getReferralSuggestions tRPC procedure (combines providers + resources)
-- [ ] Create ReferralSuggestions UI component with match scores
-- [ ] Add match explanation (why this provider was suggested)
+- [x] Design matching algorithm with scoring system (specialty match, location, availability, language, insurance, ROI status)
+- [x] Create client need extraction from assessment data
+- [x] Create provider capability extraction from profile data
+- [x] Implement matching score calculation (0-100)
+- [x] Create getMatchedProviders tRPC procedure
+- [x] Create getMatchedResources tRPC procedure
+- [x] Create getReferralSuggestions tRPC procedure (combines providers + resources)
+- [x] Create ReferralSuggestions UI component with match scores
+- [x] Add match explanation (why this provider was suggested)
 - [ ] Integrate suggestions into client profile
 - [ ] Integrate suggestions into referral creation workflow
-- [ ] Add "Send Referral" button to suggestions
+- [x] Add "Send Referral" button to suggestions
 - [ ] Test matching accuracy with various client profiles
 - [ ] Test matching with different provider specialties
 - [ ] Verify location-based matching works correctly

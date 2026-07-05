@@ -25,6 +25,18 @@ import {
   searchAlerts,
 } from "../drizzle/schema";
 import { eq, and, desc, gte, lte, or, like, inArray } from "drizzle-orm";
+import {
+  calculateProviderMatch,
+  calculateResourceMatch,
+  getTopProviderMatches,
+  getTopResourceMatches,
+  getReferralSuggestions,
+  getMatchExplanation,
+  type ClientProfile,
+  type ProviderProfile,
+  type ResourceProfile,
+  type MatchResult,
+} from "./matching";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 async function requireDb() {
@@ -1678,7 +1690,7 @@ const searchRouter = router({
     .input(z.object({
       query: z.string().optional(),
       type: z.enum(['clients', 'resources', 'providers', 'events']).optional(),
-      filters: z.record(z.any()).optional(),
+      filters: z.record(z.string(), z.any()).optional(),
     }))
     .query(async ({ input }) => {
       const db = await requireDb();
@@ -1923,42 +1935,188 @@ const clientProfileRouter = router({
     }),
 });
 
-// ─── App Router ───────────────────────────────────────────────────────────────
-export const appRouter = router({
-  system: systemRouter,
-  auth: authRouter,
-  profile: profileRouter,
-  assessment: assessmentRouter,
-  coach: coachRouter,
-  goals: goalsRouter,
-  appointments: appointmentsRouter,
-  resources: resourcesRouter,
-  counselor: counselorRouter,
-  dashboard: dashboardRouter,
-  milestones: milestonesRouter,
-  caseManager: caseManagerRouter,
-  notifications: notificationsRouter,
-  providerMessages: providerMessagesRouter,
-  multiAgency: multiAgencyRouter,
-  recommendations: recommendationsRouter,
-  countyResources: countyResourcesRouter,
-  communityEvents: communityEventsRouter,
-  serviceAreas: serviceAreasRouter,
-  dailyFeed: dailyFeedRouter,
-  favorites: favoritesRouter,
-  documents: documentsRouter,
-  messaging: messagingRouter,
-  admin: adminRouter,
-  timeline: timelineRouter,
-  permissions: permissionsRouter,
-  outcomes: multiAgencyOutcomesRouter,
-  clientProfile: clientProfileRouter,
-  search: searchRouter,
+// ─── Automated Referral Matching Router ──────────────────────────────────────
+const matchingRouter = router({
+  getMatchedProviders: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      
+      // Get client profile and assessment
+      const [client] = await db.select().from(users)
+        .where(eq(users.id, input.clientId)).limit(1);
+      if (!client) throw new TRPCError({ code: "NOT_FOUND", message: "Client not found" });
+      
+      const [assessment] = await db.select().from(needsAssessments)
+        .where(eq(needsAssessments.userId, input.clientId)).limit(1);
+      if (!assessment) throw new TRPCError({ code: "NOT_FOUND", message: "Assessment not found" });
+      
+      const [profile] = await db.select().from(userProfiles)
+        .where(eq(userProfiles.userId, input.clientId)).limit(1);
+      
+      // Extract client needs from assessment
+      const clientNeeds: string[] = [];
+      if (assessment.housingStatus) clientNeeds.push('housing');
+      if (assessment.employmentStatus) clientNeeds.push('employment');
+      if (assessment.hasHealthInsurance) clientNeeds.push('healthcare');
+      if (assessment.hasLegalIssues) clientNeeds.push('legal');
+      if (assessment.substanceUseHistory) clientNeeds.push('recovery');
+      if (assessment.mentalHealthStatus) clientNeeds.push('mental_health');
+      if (assessment.hasChildren) clientNeeds.push('family_services');
+      
+      const clientProfile: ClientProfile = {
+        id: String(input.clientId),
+        specialties: clientNeeds,
+        languages: [profile?.preferredLanguage || 'English'],
+        insurance: profile?.insuranceType || 'uninsured',
+        location: profile?.county || 'Unknown',
+        needs: clientNeeds,
+        riskLevel: assessment.onProbationOrParole ? 'high' : 'low',
+        roiStatus: 'valid',
+      };
+      
+      // Get all providers
+      const allProviders = await db.select().from(users)
+        .where(eq(users.role, 'case_manager'));
+      
+      const providerProfiles: ProviderProfile[] = allProviders.map(p => ({
+        id: String(p.id),
+        name: p.name || 'Unknown Provider',
+        specialties: ['case_management'],
+        languages: ['English'],
+        acceptedInsurance: ['All'],
+        location: 'Unknown',
+        availability: 'available' as const,
+        roiAccepted: true,
+        rating: 4.5,
+        successRate: 0.85,
+      }));
+      
+      const matches = getTopProviderMatches(clientProfile, providerProfiles, 5);
+      return matches;
+    }),
+
+  getMatchedResources: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      
+      // Get client profile and assessment
+      const [assessment] = await db.select().from(needsAssessments)
+        .where(eq(needsAssessments.userId, input.clientId)).limit(1);
+      if (!assessment) throw new TRPCError({ code: "NOT_FOUND", message: "Assessment not found" });
+      
+      const [profile] = await db.select().from(userProfiles)
+        .where(eq(userProfiles.userId, input.clientId)).limit(1);
+      
+      // Extract client needs from assessment
+      const clientNeeds: string[] = [];
+      if (assessment.housingStatus) clientNeeds.push('housing');
+      if (assessment.employmentStatus) clientNeeds.push('employment');
+      if (assessment.hasHealthInsurance) clientNeeds.push('healthcare');
+      if (assessment.hasLegalIssues) clientNeeds.push('legal');
+      if (assessment.substanceUseHistory) clientNeeds.push('recovery');
+      if (assessment.mentalHealthStatus) clientNeeds.push('mental_health');
+      if (assessment.hasChildren) clientNeeds.push('family_services');
+      
+      const clientProfile: ClientProfile = {
+        id: String(input.clientId),
+        specialties: clientNeeds,
+        languages: [profile?.preferredLanguage || 'English'],
+        insurance: profile?.insuranceType || 'uninsured',
+        location: profile?.county || 'Unknown',
+        needs: clientNeeds,
+        riskLevel: assessment.onProbationOrParole ? 'high' : 'low',
+        roiStatus: 'valid',
+      };
+      
+      // Get all resources
+      const allResources = await db.select().from(resources);
+      
+      const resourceProfiles: ResourceProfile[] = allResources.map(r => ({
+        id: String(r.id),
+        name: r.name || 'Unknown Resource',
+        category: r.category || 'General',
+        specialties: [r.category || 'General'],
+        location: 'Unknown',
+        availability: 'available' as const,
+        rating: 4.5,
+      }));
+      
+      const matches = getTopResourceMatches(clientProfile, resourceProfiles, 5);
+      return matches;
+    }),
+
+  getReferralSuggestions: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      
+      // Get client profile and assessment
+      const [assessment] = await db.select().from(needsAssessments)
+        .where(eq(needsAssessments.userId, input.clientId)).limit(1);
+      if (!assessment) throw new TRPCError({ code: "NOT_FOUND", message: "Assessment not found" });
+      
+      const [profile] = await db.select().from(userProfiles)
+        .where(eq(userProfiles.userId, input.clientId)).limit(1);
+      
+      // Extract client needs from assessment
+      const clientNeeds: string[] = [];
+      if (assessment.housingStatus) clientNeeds.push('housing');
+      if (assessment.employmentStatus) clientNeeds.push('employment');
+      if (assessment.hasHealthInsurance) clientNeeds.push('healthcare');
+      if (assessment.hasLegalIssues) clientNeeds.push('legal');
+      if (assessment.substanceUseHistory) clientNeeds.push('recovery');
+      if (assessment.mentalHealthStatus) clientNeeds.push('mental_health');
+      if (assessment.hasChildren) clientNeeds.push('family_services');
+      
+      const clientProfile: ClientProfile = {
+        id: String(input.clientId),
+        specialties: clientNeeds,
+        languages: [profile?.preferredLanguage || 'English'],
+        insurance: profile?.insuranceType || 'uninsured',
+        location: profile?.county || 'Unknown',
+        needs: clientNeeds,
+        riskLevel: assessment.onProbationOrParole ? 'high' : 'low',
+        roiStatus: 'valid',
+      };
+      
+      // Get all providers and resources
+      const allProviders = await db.select().from(users)
+        .where(eq(users.role, 'case_manager'));
+      const allResources = await db.select().from(resources);
+      
+      const providerProfiles: ProviderProfile[] = allProviders.map(p => ({
+        id: String(p.id),
+        name: p.name || 'Unknown Provider',
+        specialties: ['case_management'],
+        languages: ['English'],
+        acceptedInsurance: ['All'],
+        location: 'Unknown',
+        availability: 'available' as const,
+        roiAccepted: true,
+        rating: 4.5,
+        successRate: 0.85,
+      }));
+      
+      const resourceProfiles: ResourceProfile[] = allResources.map(r => ({
+        id: String(r.id),
+        name: r.name || 'Unknown Resource',
+        category: r.category || 'General',
+        specialties: [r.category || 'General'],
+        location: 'Unknown',
+        availability: 'available' as const,
+        rating: 4.5,
+      }));
+      
+      const matches = getReferralSuggestions(clientProfile, providerProfiles, resourceProfiles, 10);
+      return matches.map(match => ({
+        ...match,
+        explanation: getMatchExplanation(match),
+      }));
+    }),
 });
 
-export type AppRouter = typeof appRouter;
-
-// ─── App Router ───────────────────────────────────────────────────────────────
 // ─── 360° Client Timeline Router ──────────────────────────────────────────────
 const timelineRouter = router({
   getClientTimeline: protectedProcedure
@@ -2004,64 +2162,42 @@ const timelineRouter = router({
         metadata: JSON.stringify(input.metadata || {}),
         consentGiven: true,
       });
-      return { id: result[0], ...input };
-    }),
-
-  // Get saved searches
-  getSavedSearches: protectedProcedure.query(async ({ ctx }) => {
-    const db = await requireDb();
-    return db.select().from(savedSearches)
-      .where(eq(savedSearches.userId, ctx.user.id))
-      .orderBy(desc(savedSearches.createdAt));
-  }),
-
-  // Delete saved search
-  deleteSavedSearch: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      const db = await requireDb();
-      await db.delete(savedSearches)
-        .where(and(
-          eq(savedSearches.id, input.id),
-          eq(savedSearches.userId, ctx.user.id)
-        ));
-      return { success: true };
-    }),
-
-  // Create search alert
-  createAlert: protectedProcedure
-    .input(z.object({
-      savedSearchId: z.number(),
-      name: z.string(),
-      frequency: z.enum(['immediate', 'daily', 'weekly']),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const db = await requireDb();
-      const result = await db.insert(searchAlerts).values({
-        userId: ctx.user.id,
-        ...input,
-      });
-      return { id: result[0], ...input };
-    }),
-
-  // Get search alerts
-  getAlerts: protectedProcedure.query(async ({ ctx }) => {
-    const db = await requireDb();
-    return db.select().from(searchAlerts)
-      .where(eq(searchAlerts.userId, ctx.user.id))
-      .orderBy(desc(searchAlerts.createdAt));
-  }),
-
-  // Delete search alert
-  deleteAlert: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      const db = await requireDb();
-      await db.delete(searchAlerts)
-        .where(and(
-          eq(searchAlerts.id, input.id),
-          eq(searchAlerts.userId, ctx.user.id)
-        ));
       return { success: true };
     }),
 });
+
+// ─── App Router ───────────────────────────────────────────────────────────────
+export const appRouter = router({
+  system: systemRouter,
+  auth: authRouter,
+  profile: profileRouter,
+  assessment: assessmentRouter,
+  coach: coachRouter,
+  goals: goalsRouter,
+  appointments: appointmentsRouter,
+  resources: resourcesRouter,
+  counselor: counselorRouter,
+  dashboard: dashboardRouter,
+  milestones: milestonesRouter,
+  caseManager: caseManagerRouter,
+  notifications: notificationsRouter,
+  providerMessages: providerMessagesRouter,
+  multiAgency: multiAgencyRouter,
+  recommendations: recommendationsRouter,
+  countyResources: countyResourcesRouter,
+  communityEvents: communityEventsRouter,
+  serviceAreas: serviceAreasRouter,
+  dailyFeed: dailyFeedRouter,
+  favorites: favoritesRouter,
+  documents: documentsRouter,
+  messaging: messagingRouter,
+  admin: adminRouter,
+  timeline: timelineRouter,
+  permissions: permissionsRouter,
+  outcomes: multiAgencyOutcomesRouter,
+  clientProfile: clientProfileRouter,
+  search: searchRouter,
+  matching: matchingRouter,
+});
+
+export type AppRouter = typeof appRouter;
