@@ -32,6 +32,9 @@ import Documents from "./pages/Documents";
 import Favorites from "./pages/Favorites";
 import ResourceMap from "./pages/ResourceMap";
 import ProviderDashboard from "./pages/ProviderDashboard";
+import LoginChoice from "./pages/LoginChoice";
+import ClientLogin from "./pages/ClientLogin";
+import ProviderLogin from "./pages/ProviderLogin";
 
 // ─── Session Timeout (30 min inactivity) ─────────────────────────────────────
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -108,6 +111,9 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/about" component={About} />
+      <Route path="/login" component={LoginChoice} />
+      <Route path="/login/client" component={ClientLogin} />
+      <Route path="/login/provider" component={ProviderLogin} />
       <Route path="/portal-redirect" component={RolePortalRedirect} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/onboarding" component={Onboarding} />
