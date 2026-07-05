@@ -7,7 +7,9 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { useAuth } from "./_core/hooks/useAuth";
 import { useEffect, useRef, useState } from "react";
 import Home from "./pages/Home";
-import About from "./pages/About";
+import About from "@/pages/About";
+import ReferralManagement from "@/pages/ReferralManagement";
+import NotesManagement from "@/pages/NotesManagement";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Assessment from "./pages/Assessment";
@@ -129,6 +131,8 @@ function Router() {
       <Route path="/documents" component={Documents} />
       <Route path="/favorites" component={Favorites} />
       <Route path="/provider-dashboard" component={ProviderDashboard} />
+      <Route path="/referral-management" component={ReferralManagement} />
+      <Route path="/notes-management" component={NotesManagement} />
       <Route path="/portal" component={CaseManagerPortal} />
       <Route path="/provider-portal" component={ProviderPortal} />
       <Route path="/probation-portal" component={ProbationPortal} />
