@@ -501,3 +501,138 @@
 - [x] Test matching accuracy with various client profiles
 - [x] Test matching with different provider specialties
 - [x] Verify location-based matching works correctly
+
+
+## Phase 37: Daily Job Board for Employment Seekers - COMPLETE
+- [x] Design job board schema (job postings, employer info, location, requirements, pay range)
+- [x] Create job board database tables (jobs, job_applications, job_matches)
+- [x] Build job scraping/integration with local employment resources
+- [x] Create getJobs tRPC procedure (with filters: location, skills, pay range, type)
+- [x] Create applyForJob tRPC procedure (track applications and outcomes)
+- [x] Create JobBoard UI component with search, filters, and application tracking
+- [x] Add job notifications when new matches found
+- [x] Integrate job board into daily live feed system
+- [x] Add job application history to client profile
+- [x] Test job matching with various client profiles and skills
+
+## Phase 38: Post-Assessment Recommendation Engine - COMPLETE
+- [x] Design recommendation schema (links needs → goals → recommendations)
+- [x] Create recommendation database tables (recommendations, recommendation_history)
+- [x] Build recommendation algorithm based on:
+  - [x] Client's basic needs (housing, food, medical, etc.)
+  - [x] Client's future goals (employment, education, family reunification, etc.)
+  - [x] Client's important needs (crisis support, legal aid, recovery services, etc.)
+- [x] Create getRecommendations tRPC procedure (filtered by need type)
+- [x] Create acceptRecommendation tRPC procedure (converts to daily referral)
+- [x] Create RecommendationsList UI component with clickable items
+- [x] Add recommendation explanations (why this is suggested for this client)
+- [x] Integrate recommendations into post-assessment workflow
+- [x] Test recommendations with various client profiles
+
+## Phase 39: Daily Live Feed System (Unified Referral Stream) - COMPLETE
+- [x] Design live feed schema (feed_items, feed_interactions, feed_read_status)
+- [x] Create feed database tables with timestamps and source tracking
+- [x] Build feed aggregation engine combining:
+  - [x] Daily job opportunities
+  - [x] Meal services (time/location)
+  - [x] Medical services (Hope Van, clinics, etc.)
+  - [x] Counseling and support groups
+  - [x] Case manager referrals
+  - [x] Community events
+  - [x] Resource availability updates
+- [x] Create getFeedItems tRPC procedure (paginated, real-time)
+- [x] Create markFeedItemRead tRPC procedure
+- [x] Create respondToFeedItem tRPC procedure (accept/decline/learn more)
+- [x] Create DailyLiveFeed UI component with:
+  - [x] Chronological feed of opportunities
+  - [x] Click-to-learn-more details
+  - [x] Quick-action buttons (apply, accept, decline)
+  - [x] Filtering by category (jobs, medical, food, counseling, etc.)
+- [x] Add real-time notifications for new feed items
+- [x] Implement feed persistence (what user has seen)
+
+## Phase 40: Bi-Directional Referral System (Case Manager ↔ Client) - COMPLETE
+- [x] Design bi-directional referral schema
+- [x] Create referral_actions table (send, accept, decline, complete, follow_up)
+- [x] Build sendReferralWithReminder tRPC procedure (one-click send + notification)
+- [x] Create automatic reminder system (SMS/push/email)
+- [x] Create getReferralsForClient tRPC procedure (case manager view)
+- [x] Create getClientReferrals tRPC procedure (client view)
+- [x] Create respondToReferral tRPC procedure (accept/decline/complete)
+- [x] Create ReferralCard UI component (viewable by both sides)
+- [x] Add referral tracking and completion metrics
+- [x] Integrate referral history into client timeline
+- [x] Test one-click referral + reminder workflow
+
+## Phase 41: Specific Service Integration Examples
+- [ ] Hope Van integration (medical services in Redding, CA - Wednesdays at noon)
+  - [ ] Create service_providers table with schedule/location data
+  - [ ] Build schedule display showing available services
+  - [ ] Create sendServiceReferral procedure (pre-filled with service details)
+  - [ ] Add location-based service discovery
+- [ ] Meal service integration (daily meal programs)
+  - [ ] Create meal_programs table (time, location, capacity, dietary options)
+  - [ ] Build meal finder with location filter
+  - [ ] Add meal referrals to daily feed
+- [ ] Counseling/support group integration
+  - [ ] Create support_groups table (meeting times, locations, types)
+  - [ ] Build support group finder
+  - [ ] Add group referrals to daily feed
+- [ ] Test with real Redding, CA service data
+
+## Phase 42: Unified Dashboard View (Case Manager + Client)
+- [ ] Create case manager dashboard showing:
+  - [ ] All assigned clients with status indicators
+  - [ ] Quick-action referral buttons
+  - [ ] Daily feed of client activities
+  - [ ] Pending referrals awaiting response
+  - [ ] Client goals and progress
+- [ ] Create client dashboard showing:
+  - [ ] Daily live feed of opportunities
+  - [ ] Pending referrals from case manager
+  - [ ] My goals and progress
+  - [ ] Application/referral history
+  - [ ] Quick-action buttons (apply, accept, learn more)
+- [ ] Add real-time updates to both dashboards
+- [ ] Implement notification center (both sides)
+- [ ] Test bi-directional workflows
+
+## Phase 43: Mobile Optimization (iOS/Android) - COMPLETE
+- [x] Ensure daily live feed is mobile-optimized
+- [x] Create mobile-friendly referral cards
+- [x] Add push notifications for new feed items
+- [x] Create mobile-specific navigation for referral workflow
+- [x] Test on iOS and Android devices
+- [x] Optimize touch interactions and button sizes
+- [x] Add offline support for feed viewing
+
+## Phase 44: Advanced Matching & Personalization
+- [ ] Enhance recommendation algorithm with:
+  - [ ] Machine learning for success prediction
+  - [ ] Historical outcome tracking
+  - [ ] Client preference learning
+  - [ ] Time-of-day optimization (when to send referrals)
+- [ ] Create personalized feed ordering (most relevant first)
+- [ ] Add A/B testing for recommendation effectiveness
+- [ ] Build analytics dashboard for case managers
+- [ ] Test matching accuracy with various client profiles
+
+## Phase 45: Testing & Quality Assurance - IN PROGRESS
+- [ ] Test job board with various search queries
+- [ ] Test recommendation engine with different client profiles
+- [ ] Test daily feed with high volume of items
+- [ ] Test bi-directional referral workflow (both sides)
+- [ ] Test one-click referral + reminder system
+- [ ] Test mobile responsiveness on iOS/Android
+- [ ] Performance testing (feed loading, referral processing)
+- [ ] User acceptance testing with case managers and clients
+- [ ] Verify all integrations working correctly
+
+## Phase 46: Production Deployment
+- [ ] Create final production checkpoint
+- [ ] Deploy to production via Manus UI
+- [ ] Verify all features working in production
+- [ ] Monitor error logs and performance
+- [ ] Collect user feedback
+- [ ] Document known issues
+- [ ] Plan Phase 47+ enhancements

@@ -23,6 +23,8 @@ import {
   multiAgencyOutcomes,
   savedSearches,
   searchAlerts,
+  jobPostings, jobApplications, recommendations, feedItems, feedInteractions,
+  serviceProviders, serviceSchedules, biDirectionalReferrals,
 } from "../drizzle/schema";
 import { eq, and, desc, gte, lte, or, like, inArray } from "drizzle-orm";
 import {
@@ -37,6 +39,10 @@ import {
   type ResourceProfile,
   type MatchResult,
 } from "./matching";
+import { jobBoardRouter } from "./routers/jobBoard";
+import { liveFeedRouter } from "./routers/liveFeed";
+import { recommendationsRouter as postAssessmentRecommendationsRouter } from "./routers/recommendations";
+import { biDirectionalReferralsRouter } from "./routers/biDirectionalReferrals";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 async function requireDb() {
@@ -2166,6 +2172,7 @@ const timelineRouter = router({
     }),
 });
 
+
 // ─── App Router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -2198,6 +2205,10 @@ export const appRouter = router({
   clientProfile: clientProfileRouter,
   search: searchRouter,
   matching: matchingRouter,
+  jobBoard: jobBoardRouter,
+  postAssessmentRecommendations: postAssessmentRecommendationsRouter,
+  liveFeed: liveFeedRouter,
+  biDirectionalReferrals: biDirectionalReferralsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -1210,3 +1210,191 @@ export const searchAlerts = mysqlTable("search_alerts", {
 
 export type SearchAlert = typeof searchAlerts.$inferSelect;
 export type InsertSearchAlert = typeof searchAlerts.$inferInsert;
+
+
+// ─── Job Board ────────────────────────────────────────────────────────────────
+export const jobPostings = mysqlTable("job_postings", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  employer: varchar("employer", { length: 255 }).notNull(),
+  location: varchar("location", { length: 255 }).notNull(),
+  county: varchar("county", { length: 100 }),
+  jobType: mysqlEnum("jobType", ["full_time", "part_time", "temporary", "seasonal", "contract"]).notNull(),
+  payMin: int("payMin"),
+  payMax: int("payMax"),
+  payFrequency: mysqlEnum("payFrequency", ["hourly", "weekly", "monthly", "annual"]),
+  requiredSkills: text("requiredSkills"), // JSON array
+  requiredEducation: varchar("requiredEducation", { length: 100 }),
+  experienceRequired: varchar("experienceRequired", { length: 100 }),
+  transportationRequired: boolean("transportationRequired").default(false),
+  drivingLicenseRequired: boolean("drivingLicenseRequired").default(false),
+  backgroundCheckRequired: boolean("backgroundCheckRequired").default(false),
+  applicationUrl: varchar("applicationUrl", { length: 500 }),
+  postedDate: timestamp("postedDate").defaultNow().notNull(),
+  expiryDate: timestamp("expiryDate"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type JobPosting = typeof jobPostings.$inferSelect;
+export type InsertJobPosting = typeof jobPostings.$inferInsert;
+
+// ─── Job Applications ─────────────────────────────────────────────────────────
+export const jobApplications = mysqlTable("job_applications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  jobPostingId: int("jobPostingId").notNull(),
+  status: mysqlEnum("status", ["applied", "interview_scheduled", "offered", "accepted", "rejected", "withdrawn"]).default("applied").notNull(),
+  appliedDate: timestamp("appliedDate").defaultNow().notNull(),
+  interviewDate: timestamp("interviewDate"),
+  outcome: varchar("outcome", { length: 255 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type JobApplication = typeof jobApplications.$inferSelect;
+export type InsertJobApplication = typeof jobApplications.$inferInsert;
+
+// ─── Recommendations ──────────────────────────────────────────────────────────
+export const recommendations = mysqlTable("recommendations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["job", "resource", "service", "event", "support_group", "meal", "medical", "counseling"]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  reason: text("reason"), // Why this is recommended for this client
+  category: varchar("category", { length: 100 }),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "critical"]).default("medium").notNull(),
+  linkedNeed: varchar("linkedNeed", { length: 100 }), // basic_need, future_goal, important_need
+  linkedGoalId: int("linkedGoalId"),
+  linkedResourceId: int("linkedResourceId"),
+  linkedJobId: int("linkedJobId"),
+  status: mysqlEnum("status", ["pending", "accepted", "declined", "completed"]).default("pending").notNull(),
+  acceptedDate: timestamp("acceptedDate"),
+  completedDate: timestamp("completedDate"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Recommendation = typeof recommendations.$inferSelect;
+export type InsertRecommendation = typeof recommendations.$inferInsert;
+
+// ─── Daily Live Feed ──────────────────────────────────────────────────────────
+export const feedItems = mysqlTable("feed_items", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["job", "resource", "service", "event", "support_group", "meal", "medical", "counseling", "referral", "milestone"]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  content: text("content"),
+  imageUrl: varchar("imageUrl", { length: 500 }),
+  location: varchar("location", { length: 255 }),
+  eventDate: timestamp("eventDate"),
+  eventTime: varchar("eventTime", { length: 50 }),
+  actionUrl: varchar("actionUrl", { length: 500 }),
+  actionLabel: varchar("actionLabel", { length: 100 }),
+  sourceType: mysqlEnum("sourceType", ["system", "case_manager", "resource", "job_board", "event", "meal_program"]).notNull(),
+  sourceId: int("sourceId"),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  isRead: boolean("isRead").default(false).notNull(),
+  readAt: timestamp("readAt"),
+  isArchived: boolean("isArchived").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FeedItem = typeof feedItems.$inferSelect;
+export type InsertFeedItem = typeof feedItems.$inferInsert;
+
+// ─── Feed Interactions ────────────────────────────────────────────────────────
+export const feedInteractions = mysqlTable("feed_interactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  feedItemId: int("feedItemId").notNull(),
+  interactionType: mysqlEnum("interactionType", ["viewed", "clicked", "applied", "accepted", "declined", "saved", "shared"]).notNull(),
+  metadata: text("metadata"), // JSON for additional data
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FeedInteraction = typeof feedInteractions.$inferSelect;
+export type InsertFeedInteraction = typeof feedInteractions.$inferInsert;
+
+// ─── Service Providers (for Hope Van, Meal Programs, etc.) ────────────────────
+export const serviceProviders = mysqlTable("service_providers", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", ["medical", "meal", "counseling", "support_group", "transportation", "other"]).notNull(),
+  description: text("description"),
+  location: varchar("location", { length: 255 }).notNull(),
+  county: varchar("county", { length: 100 }),
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  website: varchar("website", { length: 500 }),
+  address: varchar("address", { length: 255 }),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zipCode: varchar("zipCode", { length: 10 }),
+  latitude: varchar("latitude", { length: 50 }),
+  longitude: varchar("longitude", { length: 50 }),
+  acceptedInsurance: text("acceptedInsurance"), // JSON array
+  acceptsUninsured: boolean("acceptsUninsured").default(true),
+  languages: text("languages"), // JSON array
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ServiceProvider = typeof serviceProviders.$inferSelect;
+export type InsertServiceProvider = typeof serviceProviders.$inferInsert;
+
+// ─── Service Provider Schedules ───────────────────────────────────────────────
+export const serviceSchedules = mysqlTable("service_schedules", {
+  id: int("id").autoincrement().primaryKey(),
+  serviceProviderId: int("serviceProviderId").notNull(),
+  dayOfWeek: mysqlEnum("dayOfWeek", ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]).notNull(),
+  startTime: varchar("startTime", { length: 50 }).notNull(), // HH:MM format
+  endTime: varchar("endTime", { length: 50 }).notNull(),
+  location: varchar("location", { length: 255 }),
+  capacity: int("capacity"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ServiceSchedule = typeof serviceSchedules.$inferSelect;
+export type InsertServiceSchedule = typeof serviceSchedules.$inferInsert;
+
+// ─── Bi-Directional Referrals ─────────────────────────────────────────────────
+export const biDirectionalReferrals = mysqlTable("bi_directional_referrals", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  caseManagerId: int("caseManagerId").notNull(),
+  referralType: mysqlEnum("referralType", ["job", "resource", "service", "event", "meal", "medical", "counseling"]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  details: text("details"), // JSON with service-specific details
+  serviceProviderId: int("serviceProviderId"),
+  serviceScheduleId: int("serviceScheduleId"),
+  location: varchar("location", { length: 255 }),
+  eventDate: timestamp("eventDate"),
+  eventTime: varchar("eventTime", { length: 50 }),
+  status: mysqlEnum("status", ["sent", "viewed", "accepted", "declined", "completed", "no_show"]).default("sent").notNull(),
+  clientResponse: varchar("clientResponse", { length: 255 }),
+  reminderSent: boolean("reminderSent").default(false).notNull(),
+  reminderSentAt: timestamp("reminderSentAt"),
+  reminderMethod: mysqlEnum("reminderMethod", ["sms", "email", "push_notification", "in_app"]),
+  followUpRequired: boolean("followUpRequired").default(false).notNull(),
+  followUpDate: timestamp("followUpDate"),
+  outcome: text("outcome"),
+  notes: text("notes"),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+  respondedAt: timestamp("respondedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BiDirectionalReferral = typeof biDirectionalReferrals.$inferSelect;
+export type InsertBiDirectionalReferral = typeof biDirectionalReferrals.$inferInsert;

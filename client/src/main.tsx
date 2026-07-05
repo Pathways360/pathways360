@@ -7,6 +7,16 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
+import { useServiceWorker } from "./hooks/useServiceWorker";
+
+// Register service worker for PWA support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
+      console.log('Service Worker registration failed:', error);
+    });
+  });
+}
 
 const queryClient = new QueryClient();
 

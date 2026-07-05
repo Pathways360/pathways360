@@ -50,6 +50,10 @@ import ProviderAlerts from "./pages/ProviderAlerts";
 import { NotificationCenter } from "./components/NotificationCenter";
 import { NotificationPreferences } from "./pages/NotificationPreferences";
 import { AdvancedSearch } from "./pages/AdvancedSearch";
+import { JobBoard } from "./pages/JobBoard";
+import { LiveFeedDashboard } from "./pages/LiveFeedDashboard";
+import { RecommendationsDashboard } from "./pages/RecommendationsDashboard";
+import { ReferralsDashboard } from "./pages/ReferralsDashboard";
 
 // ─── Session Timeout (30 min inactivity) ─────────────────────────────────────
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -169,6 +173,10 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/notification-preferences" component={NotificationPreferences} />
       <Route path="/advanced-search" component={AdvancedSearch} />
+      <Route path="/job-board" component={JobBoard} />
+      <Route path="/live-feed" component={LiveFeedDashboard} />
+      <Route path="/recommendations" component={RecommendationsDashboard} />
+      <Route path="/referrals" component={ReferralsDashboard} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
