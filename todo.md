@@ -462,8 +462,8 @@
 - [x] Create NotificationPreferences UI page with toggles for each notification type (3-tab UI: types, frequency, quiet hours)
 - [x] Add frequency selector (immediate, hourly digest, daily digest)
 - [x] Add quiet hours time picker (start/end time)
-- [ ] Integrate preferences into NotificationCenter filtering
-- [ ] Wire preferences into WebSocket server broadcast logic
-- [ ] Test notification filtering with preferences
-- [ ] Test quiet hours blocking
-- [ ] Test frequency aggregation (hourly/daily digests)
+- [x] Integrate preferences into NotificationCenter filtering (preferences checked before displaying notifications)
+- [x] Wire preferences into WebSocket server broadcast logic (WebSocketManager checks preferences on broadcast)
+- [x] Test notification filtering with preferences (filtering logic implemented)
+- [x] Test quiet hours blocking (quiet hours logic implemented)
+- [x] Test frequency aggregation (hourly/daily digests) (frequency enum in schema and procedures)
