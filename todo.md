@@ -244,10 +244,11 @@
 
 ## Phase 19: 360° Client Timeline Feature
 - [x] Design and implement 360° Client Timeline database schema
-- [ ] Create timeline view component showing chronological history
-- [ ] Add appointments, case notes, milestones, medication changes, court dates, referrals, housing updates, employment progress, messages
+- [x] Create timeline view component showing chronological history
+- [ ] Add case notes and court date event types to timeline
 - [ ] Implement role-based access control for timeline visibility
-- [ ] Integrate timeline into provider dashboards and client profile
+- [ ] Integrate timeline into client/shared profile view (currently only in provider dashboards)
+- [ ] Wire ClientTimeline to live timeline data instead of mock events
 
 ## Phase 20: Expand Provider Dashboard Fields
 - [x] Add Insurance section (provider, ID, case manager, auth number, renewal date, coverage status)
@@ -270,7 +271,7 @@
 - [x] Employment Specialist: resume, applications, interviews, job placement, retention
 
 ## Phase 22: Create Collaborative Care Hub & Multi-Agency Outcome & ROI Dashboard
-- [ ] Rename "Multi-Agency ROI" to "Collaborative Care Hub"
+- [ ] Rename "Multi-Agency ROI" to "Collaborative Care Hub" consistently across UI
 - [x] Create Multi-Agency Outcome & ROI Dashboard measuring: housing stability, treatment engagement, medication adherence, appointment attendance, employment placement, family reunification, ED utilization reduction, recidivism reduction, cost savings, grant performance, quality metrics, program outcomes
 - [ ] Add reporting and analytics capabilities
 - [ ] Implement data export (PDF/CSV)
