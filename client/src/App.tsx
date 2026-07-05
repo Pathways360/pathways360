@@ -31,6 +31,7 @@ import Messaging from "./pages/Messaging";
 import Documents from "./pages/Documents";
 import Favorites from "./pages/Favorites";
 import ResourceMap from "./pages/ResourceMap";
+import ProviderDashboard from "./pages/ProviderDashboard";
 
 // ─── Session Timeout (30 min inactivity) ─────────────────────────────────────
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -121,6 +122,7 @@ function Router() {
       <Route path="/messaging" component={Messaging} />
       <Route path="/documents" component={Documents} />
       <Route path="/favorites" component={Favorites} />
+      <Route path="/provider-dashboard" component={ProviderDashboard} />
       <Route path="/portal" component={CaseManagerPortal} />
       <Route path="/provider-portal" component={ProviderPortal} />
       <Route path="/probation-portal" component={ProbationPortal} />

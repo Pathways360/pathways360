@@ -304,10 +304,10 @@
 - [x] Test all role-based redirects
 
 ## Phase 26: Build Backend Dashboard (Core)
-- [ ] Create client list view with search/filter
-- [ ] Create client profile view page
-- [ ] Create 360° timeline view
-- [ ] Create appointments tracking section
+- [x] Create client list view with search/filter
+- [x] Create client profile view page
+- [x] Create 360° timeline view
+- [x] Create appointments tracking section
 - [ ] Create court dates tracking section
 - [ ] Create CPS/CFS hearings tracking section
 - [ ] Create probation check-ins tracking section
