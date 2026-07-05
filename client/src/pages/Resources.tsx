@@ -85,7 +85,7 @@ export default function Resources() {
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [selectedCounty, setSelectedCounty] = useState("all");
-  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCity, setSelectedCity] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedUrgency, setSelectedUrgency] = useState("all");
   const [selectedNeedType, setSelectedNeedType] = useState("all");
@@ -100,7 +100,7 @@ export default function Resources() {
   // Filter resources based on all criteria
   const filtered = DEMO_RESOURCES.filter((r: any) => {
     if (selectedCounty !== "all" && r.county !== selectedCounty) return false;
-    if (selectedCity && r.city !== selectedCity) return false;
+    if (selectedCity !== "all" && r.city !== selectedCity) return false;
     if (selectedCategory !== "all" && r.category !== selectedCategory) return false;
     if (selectedUrgency !== "all" && r.urgency !== selectedUrgency) return false;
     if (selectedNeedType !== "all" && r.needType !== selectedNeedType) return false;
@@ -209,7 +209,7 @@ export default function Resources() {
                 <SelectValue placeholder="Select city" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Cities</SelectItem>
+                <SelectItem value="all">All Cities</SelectItem>
                 {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
