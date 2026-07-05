@@ -47,6 +47,7 @@ import ClientSearch from "./pages/ClientSearch";
 import ProviderMessaging from "./pages/ProviderMessaging";
 import ProviderReferrals from "./pages/ProviderReferrals";
 import ProviderAlerts from "./pages/ProviderAlerts";
+import { NotificationCenter } from "./components/NotificationCenter";
 
 // ─── Session Timeout (30 min inactivity) ─────────────────────────────────────
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -177,6 +178,9 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <SessionTimeoutGuard />
+          <div className="fixed top-4 right-4 z-40">
+            <NotificationCenter />
+          </div>
           <Router />
         </TooltipProvider>
       </ThemeProvider>
