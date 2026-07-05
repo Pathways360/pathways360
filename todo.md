@@ -326,59 +326,59 @@
 - [ ] Create success page print feature (78%+ achievement only)
 
 ## Phase 27: Build Communication Tools
-- [ ] Implement staff-to-client messaging
-- [ ] Implement staff-to-staff messaging
-- [ ] Implement referral messages
-- [ ] Implement appointment reminders
-- [ ] Implement court reminders
-- [ ] Implement medication reminders
-- [ ] Implement recovery milestone alerts
-- [ ] Implement missed appointment alerts
-- [ ] Implement ROI expiration alerts
-- [ ] Implement task assignment alerts
+- [x] Implement staff-to-client messaging (ProviderMessaging component)
+- [x] Implement staff-to-staff messaging (ProviderMessaging component)
+- [x] Implement referral messages (ReferralTrackingSection component)
+- [x] Implement appointment reminders (RemindersSection component)
+- [x] Implement court reminders (RemindersSection component)
+- [x] Implement medication reminders (RemindersSection component)
+- [x] Implement recovery milestone alerts (AlertsSection component)
+- [x] Implement missed appointment alerts (AlertsSection component)
+- [x] Implement ROI expiration alerts (AlertsSection component)
+- [x] Implement task assignment alerts (AlertsSection component)
 
 ## Phase 28: Build Referral System
-- [ ] Create referral creation form
-- [ ] Implement referral sending
-- [ ] Create referral status tracking
-- [ ] Implement referral accepted status
-- [ ] Implement referral pending status
-- [ ] Implement referral denied status
-- [ ] Implement referral completed status
-- [ ] Add referral notes field
-- [ ] Add agency receiving referral field
-- [ ] Attach client consent/ROI to referral
+- [x] Create referral creation form (ReferralTrackingSection component)
+- [x] Implement referral sending (ReferralTrackingSection component)
+- [x] Create referral status tracking (ReferralTrackingSection component)
+- [x] Implement referral accepted status (ReferralTrackingSection component)
+- [x] Implement referral pending status (ReferralTrackingSection component)
+- [x] Implement referral denied status (ReferralTrackingSection component)
+- [x] Implement referral completed status (ReferralTrackingSection component)
+- [x] Add referral notes field (ReferralTrackingSection component)
+- [x] Add agency receiving referral field (ReferralTrackingSection component)
+- [x] Attach client consent/ROI to referral (ReferralTrackingSection component)
 
 ## Phase 29: Build Notes System
-- [ ] Implement private staff notes
-- [ ] Implement shared agency notes
-- [ ] Implement client-visible notes
-- [ ] Implement court/probation/CPS/CFS notes
-- [ ] Implement medical/medication notes
-- [ ] Implement recovery notes
-- [ ] Add author, agency, timestamp, visibility level, permission status to all notes
+- [x] Implement private staff notes (NotesSection component)
+- [x] Implement shared agency notes (NotesSection component)
+- [x] Implement client-visible notes (NotesSection component)
+- [x] Implement court/probation/CPS/CFS notes (NotesSection component)
+- [x] Implement medical/medication notes (NotesSection component)
+- [x] Implement recovery notes (NotesSection component)
+- [x] Add author, agency, timestamp, visibility level, permission status to all notes (NotesSection component)
 
 ## Phase 30: Build ROI and Permission Controls
-- [ ] Implement ROI permission requirement for all data access
-- [ ] Create client profile permission display (agencies, view permissions, expiration)
-- [ ] Implement access blocking for expired/revoked/missing ROI
-- [ ] Add ROI expiration tracking
-- [ ] Add ROI revocation functionality
-- [ ] Implement permission audit logging
+- [x] Implement ROI permission requirement for all data access (PermissionsDisplay component)
+- [x] Create client profile permission display (agencies, view permissions, expiration) (PermissionsDisplay component)
+- [x] Implement access blocking for expired/revoked/missing ROI (PermissionsDisplay component)
+- [x] Add ROI expiration tracking (PermissionsDisplay component)
+- [x] Add ROI revocation functionality (PermissionsDisplay component)
+- [ ] Implement permission audit logging (backend integration needed)
 
 ## Phase 31: Build Multi-Agency Collaboration Feature
-- [ ] Create multi-agency compact view
-- [ ] Show assigned agencies
-- [ ] Show assigned workers
-- [ ] Show shared goals
-- [ ] Show shared notes
-- [ ] Show referrals
-- [ ] Show appointments
-- [ ] Show court requirements
-- [ ] Show CPS/CFS requirements
-- [ ] Show probation requirements
-- [ ] Show medication support
-- [ ] Show recovery milestones
+- [x] Create multi-agency compact view (MultiAgencyCollaborationView component)
+- [x] Show assigned agencies (MultiAgencyCollaborationView component)
+- [x] Show assigned workers (MultiAgencyCollaborationView component)
+- [x] Show shared goals (MultiAgencyCollaborationView component)
+- [x] Show shared notes (MultiAgencyCollaborationView component)
+- [ ] Show referrals (integrated from ReferralTrackingSection)
+- [ ] Show appointments (integrated from AppointmentsSection)
+- [ ] Show court requirements (integrated from CourtDatesSection)
+- [ ] Show CPS/CFS requirements (backend integration needed)
+- [ ] Show probation requirements (integrated from timeline)
+- [ ] Show medication support (integrated from MedicationTrackingSection)
+- [ ] Show recovery milestones (integrated from RecoveryTrackingSection)
 
 ## Phase 32: Comprehensive Testing and Bug Fixes
 - [ ] Test all role-based logins
