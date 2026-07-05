@@ -10,6 +10,9 @@ import Home from "./pages/Home";
 import About from "@/pages/About";
 import ReferralManagement from "@/pages/ReferralManagement";
 import NotesManagement from "@/pages/NotesManagement";
+import ROIDashboard from "@/pages/ROIDashboard";
+import PermissionControls from "@/pages/PermissionControls";
+import MultiAgencyHub from "@/pages/MultiAgencyHub";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Assessment from "./pages/Assessment";
@@ -133,6 +136,9 @@ function Router() {
       <Route path="/provider-dashboard" component={ProviderDashboard} />
       <Route path="/referral-management" component={ReferralManagement} />
       <Route path="/notes-management" component={NotesManagement} />
+      <Route path="/roi-dashboard" component={ROIDashboard} />
+      <Route path="/permission-controls" component={PermissionControls} />
+      <Route path="/multi-agency-hub" component={MultiAgencyHub} />
       <Route path="/portal" component={CaseManagerPortal} />
       <Route path="/provider-portal" component={ProviderPortal} />
       <Route path="/probation-portal" component={ProbationPortal} />
