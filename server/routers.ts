@@ -1730,7 +1730,7 @@ const permissionsRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
-      const [result] = await db.insert(providerPermissions).values({
+      await db.insert(providerPermissions).values({
         clientId: input.clientId,
         providerId: input.providerId,
         providerRole: input.providerRole,
@@ -1738,7 +1738,7 @@ const permissionsRouter = router({
         consentGiven: true,
         consentDate: new Date(),
       });
-      return result;
+      return { success: true };
     }),
 
   revokePermission: protectedProcedure
@@ -1756,9 +1756,9 @@ const multiAgencyOutcomesRouter = router({
     .input(z.object({ clientId: z.number() }))
     .query(async ({ ctx, input }) => {
       const db = await requireDb();
-      const [outcomes] = await db.select().from(multiAgencyOutcomes)
+      const outcomes = await db.select().from(multiAgencyOutcomes)
         .where(eq(multiAgencyOutcomes.clientId, input.clientId)).limit(1);
-      return outcomes || null;
+      return outcomes?.[0] || null;
     }),
 
   updateOutcomes: protectedProcedure
@@ -1780,10 +1780,11 @@ const multiAgencyOutcomesRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
       const { clientId, ...data } = input;
-      const [existing] = await db.select().from(multiAgencyOutcomes)
+      const existing = await db.select().from(multiAgencyOutcomes)
         .where(eq(multiAgencyOutcomes.clientId, clientId)).limit(1);
+      const existingRecord = existing?.[0];
 
-      if (existing) {
+      if (existingRecord) {
         await db.update(multiAgencyOutcomes)
           .set({
             ...data,
