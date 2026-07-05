@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { useAuth } from "./_core/hooks/useAuth";
 import { useEffect, useRef, useState } from "react";
 import Home from "./pages/Home";
+import About from "./pages/About";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Assessment from "./pages/Assessment";
@@ -105,6 +106,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/about" component={About} />
       <Route path="/portal-redirect" component={RolePortalRedirect} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/onboarding" component={Onboarding} />

@@ -235,3 +235,42 @@
 - [x] Add footer to all authenticated portal pages (Dashboard, all role portals)
 - [x] Ensure footer is subtle and professional (no overdoing branding)
 - [x] Test footer responsiveness on mobile and desktop
+
+## Phase 18: Fix Distorted Logos & Add Footer Enhancements
+- [ ] Fix distorted logos in Home.tsx, DashboardLayout.tsx, ProviderPortal.tsx (resize/replace)
+- [ ] Add social media links to Footer component (LinkedIn, Twitter, Facebook)
+- [ ] Create About page and link from footer
+- [ ] Add newsletter signup form to footer
+
+## Phase 19: 360° Client Timeline Feature
+- [ ] Design and implement 360° Client Timeline database schema
+- [ ] Create timeline view component showing chronological history
+- [ ] Add appointments, case notes, milestones, medication changes, court dates, referrals, housing updates, employment progress, messages
+- [ ] Implement role-based access control for timeline visibility
+- [ ] Integrate timeline into provider dashboards and client profile
+
+## Phase 20: Expand Provider Dashboard Fields
+- [ ] Add Insurance section (provider, ID, case manager, auth number, renewal date, coverage status)
+- [ ] Add Medication Management (current meds, compliance, type, monitoring, alerts)
+- [ ] Add Employment section (status, work eligible, restrictions, disability, SSI/SSDI, vocational rehab, goals)
+- [ ] Add Housing section (current housing, stability score, goals)
+- [ ] Add Court/Probation section (officer, dates, conditions, service hours, drug testing, compliance)
+- [ ] Add Child Welfare section (CPS case, case worker, custody, visitation, court hearings, reunification)
+- [ ] Add Behavioral Health section (diagnosis, providers, level of care, risk, safety plan)
+- [ ] Add Medical section (PCP, specialists, conditions, allergies, emergency contact, hospitalizations)
+- [ ] Add Recovery section (clean date, primary drug, meetings, sponsor, goals, relapse history, triggers)
+- [ ] Add Education section (diploma, GED, college, trade school, certifications, enrollment, career goals)
+- [ ] Add Life Goals section (housing, employment, driver license, transportation, family reunification, financial, education, recovery, health, legal)
+
+## Phase 21: Implement Role-Based Permissions
+- [ ] ECM: wellness, appointments, care plans, insurance authorizations, SDOH, utilization, outcomes, approvals, ROI reporting
+- [ ] Rehabilitation Centers: attendance, drug tests, progress notes, treatment completion, aftercare
+- [ ] Probation: compliance, court reminders, community service, drug testing, violations, incentives
+- [ ] Housing Provider: move-in status, lease compliance, inspections, rent assistance, stability tracking
+- [ ] Employment Specialist: resume, applications, interviews, job placement, retention
+
+## Phase 22: Create Collaborative Care Hub & Multi-Agency Outcome & ROI Dashboard
+- [ ] Rename "Multi-Agency ROI" to "Collaborative Care Hub"
+- [ ] Create Multi-Agency Outcome & ROI Dashboard measuring: housing stability, treatment engagement, medication adherence, appointment attendance, employment placement, family reunification, ED utilization reduction, recidivism reduction, cost savings, grant performance, quality metrics, program outcomes
+- [ ] Add reporting and analytics capabilities
+- [ ] Implement data export (PDF/CSV)

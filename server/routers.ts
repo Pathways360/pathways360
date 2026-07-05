@@ -16,7 +16,11 @@ import {
   resourceRecommendations, countyResources, progressMilestones,
   communityEvents, userServiceAreas, eventEngagement, dailyFeedItems,
   userFavorites, recentlyViewed, userDocuments,
-  messageThreads, threadParticipants, threadMessages, auditLog
+  messageThreads, threadParticipants, threadMessages, auditLog,
+  clientTimeline, clientInsurance, clientMedications, clientEmployment,
+  clientHousing, clientCourt, clientChildWelfare, clientBehavioralHealth,
+  clientMedical, clientRecovery, clientEducation, providerPermissions,
+  multiAgencyOutcomes
 } from "../drizzle/schema";
 import { eq, and, desc, gte, lte, or, like, inArray } from "drizzle-orm";
 
@@ -1657,6 +1661,260 @@ const adminRouter = router({
 });
 
 // ─── App Router ───────────────────────────────────────────────────────────────
+// ─── 360° Client Timeline Router ──────────────────────────────────────────────
+const timelineRouter = router({
+  getClientTimeline: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      // Check permissions
+      const [permission] = await db.select().from(providerPermissions)
+        .where(and(
+          eq(providerPermissions.providerId, ctx.user.id),
+          eq(providerPermissions.clientId, input.clientId)
+        )).limit(1);
+      if (!permission?.consentGiven) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "No access to this client's timeline" });
+      }
+      const events = await db.select().from(clientTimeline)
+        .where(eq(clientTimeline.clientUserId, input.clientId))
+        .orderBy(desc(clientTimeline.eventDate));
+      return events;
+    }),
+
+  addTimelineEvent: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      eventType: z.enum(["appointment", "case_note", "milestone", "medication_change", "court_date", "referral", "housing_update", "employment_progress", "message", "assessment", "goal_update", "recovery_milestone", "provider_note"]),
+      title: z.string(),
+      description: z.string().optional(),
+      eventDate: z.date(),
+      visibleToRoles: z.array(z.string()).optional(),
+      metadata: z.record(z.any()).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [result] = await db.insert(clientTimeline).values({
+        clientUserId: input.clientId,
+        eventType: input.eventType,
+        title: input.title,
+        description: input.description,
+        eventDate: input.eventDate,
+        createdByUserId: ctx.user.id,
+        createdByRole: ctx.user.role,
+        visibleToRoles: JSON.stringify(input.visibleToRoles || []),
+        metadata: JSON.stringify(input.metadata || {}),
+        consentGiven: true,
+      });
+      return result;
+    }),
+});
+
+// ─── Provider Permissions Router ──────────────────────────────────────────────
+const permissionsRouter = router({
+  getClientPermissions: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const perms = await db.select().from(providerPermissions)
+        .where(eq(providerPermissions.clientId, input.clientId));
+      return perms;
+    }),
+
+  grantPermission: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      providerId: z.number(),
+      providerRole: z.string(),
+      permissions: z.array(z.string()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [result] = await db.insert(providerPermissions).values({
+        clientId: input.clientId,
+        providerId: input.providerId,
+        providerRole: input.providerRole,
+        permissions: JSON.stringify(input.permissions),
+        consentGiven: true,
+        consentDate: new Date(),
+      });
+      return result;
+    }),
+
+  revokePermission: protectedProcedure
+    .input(z.object({ permissionId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      await db.delete(providerPermissions).where(eq(providerPermissions.id, input.permissionId));
+      return { success: true };
+    }),
+});
+
+// ─── Multi-Agency Outcomes & ROI Router ───────────────────────────────────────
+const multiAgencyOutcomesRouter = router({
+  getOutcomes: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [outcomes] = await db.select().from(multiAgencyOutcomes)
+        .where(eq(multiAgencyOutcomes.clientId, input.clientId)).limit(1);
+      return outcomes || null;
+    }),
+
+  updateOutcomes: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      housingStability: z.boolean().optional(),
+      treatmentEngagement: z.boolean().optional(),
+      medicationAdherence: z.boolean().optional(),
+      appointmentAttendance: z.number().optional(),
+      employmentPlacement: z.boolean().optional(),
+      familyReunification: z.boolean().optional(),
+      edUtilizationReduction: z.number().optional(),
+      recidivismReduction: z.boolean().optional(),
+      costSavings: z.number().optional(),
+      grantPerformanceMetrics: z.record(z.any()).optional(),
+      qualityMetrics: z.record(z.any()).optional(),
+      programOutcomes: z.record(z.any()).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const { clientId, ...data } = input;
+      const [existing] = await db.select().from(multiAgencyOutcomes)
+        .where(eq(multiAgencyOutcomes.clientId, clientId)).limit(1);
+
+      if (existing) {
+        await db.update(multiAgencyOutcomes)
+          .set({
+            ...data,
+            grantPerformanceMetrics: data.grantPerformanceMetrics ? JSON.stringify(data.grantPerformanceMetrics) : undefined,
+            qualityMetrics: data.qualityMetrics ? JSON.stringify(data.qualityMetrics) : undefined,
+            programOutcomes: data.programOutcomes ? JSON.stringify(data.programOutcomes) : undefined,
+          })
+          .where(eq(multiAgencyOutcomes.clientId, clientId));
+      } else {
+        await db.insert(multiAgencyOutcomes).values({
+          clientId,
+          ...data,
+          grantPerformanceMetrics: data.grantPerformanceMetrics ? JSON.stringify(data.grantPerformanceMetrics) : undefined,
+          qualityMetrics: data.qualityMetrics ? JSON.stringify(data.qualityMetrics) : undefined,
+          programOutcomes: data.programOutcomes ? JSON.stringify(data.programOutcomes) : undefined,
+        });
+      }
+      return { success: true };
+    }),
+
+  getDashboard: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await requireDb();
+      const outcomes = await db.select().from(multiAgencyOutcomes);
+      return {
+        totalClients: outcomes.length,
+        housingStability: outcomes.filter(o => o.housingStability).length,
+        treatmentEngagement: outcomes.filter(o => o.treatmentEngagement).length,
+        medicationAdherence: outcomes.filter(o => o.medicationAdherence).length,
+        employmentPlacement: outcomes.filter(o => o.employmentPlacement).length,
+        familyReunification: outcomes.filter(o => o.familyReunification).length,
+        recidivismReduction: outcomes.filter(o => o.recidivismReduction).length,
+        totalCostSavings: outcomes.reduce((sum, o) => sum + (o.costSavings || 0), 0),
+        avgAppointmentAttendance: outcomes.length > 0 
+          ? Math.round(outcomes.reduce((sum, o) => sum + (o.appointmentAttendance || 0), 0) / outcomes.length)
+          : 0,
+      };
+    }),
+});
+
+// ─── Client Profile Data Router (Insurance, Medications, Employment, etc.) ────
+const clientProfileRouter = router({
+  getInsurance: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [insurance] = await db.select().from(clientInsurance)
+        .where(eq(clientInsurance.clientUserId, input.clientId)).limit(1);
+      return insurance || null;
+    }),
+
+  getMedications: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const meds = await db.select().from(clientMedications)
+        .where(eq(clientMedications.clientUserId, input.clientId));
+      return meds;
+    }),
+
+  getEmployment: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [employment] = await db.select().from(clientEmployment)
+        .where(eq(clientEmployment.clientUserId, input.clientId)).limit(1);
+      return employment || null;
+    }),
+
+  getHousing: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [housing] = await db.select().from(clientHousing)
+        .where(eq(clientHousing.clientUserId, input.clientId)).limit(1);
+      return housing || null;
+    }),
+
+  getCourt: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [court] = await db.select().from(clientCourt)
+        .where(eq(clientCourt.clientUserId, input.clientId)).limit(1);
+      return court || null;
+    }),
+
+  getBehavioralHealth: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [health] = await db.select().from(clientBehavioralHealth)
+        .where(eq(clientBehavioralHealth.clientUserId, input.clientId)).limit(1);
+      return health || null;
+    }),
+
+  getRecovery: protectedProcedure
+    .input(z.object({ clientId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const [recovery] = await db.select().from(clientRecovery)
+        .where(eq(clientRecovery.clientUserId, input.clientId)).limit(1);
+      return recovery || null;
+    }),
+
+  updateInsurance: protectedProcedure
+    .input(z.object({
+      clientId: z.number(),
+      insuranceProvider: z.string(),
+      insuranceId: z.string().optional(),
+      groupNumber: z.string().optional(),
+      authorizationNumber: z.string().optional(),
+      renewalDate: z.string().optional(),
+      coverageStatus: z.enum(["active", "inactive", "pending", "terminated"]).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const { clientId, ...data } = input;
+      const [existing] = await db.select().from(clientInsurance)
+        .where(eq(clientInsurance.clientUserId, clientId)).limit(1);
+
+      if (existing) {
+        await db.update(clientInsurance).set(data).where(eq(clientInsurance.clientUserId, clientId));
+      } else {
+        await db.insert(clientInsurance).values({ clientUserId: clientId, ...data });
+      }
+      return { success: true };
+    }),
+});
+
+// ─── App Router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
   auth: authRouter,
@@ -1682,6 +1940,10 @@ export const appRouter = router({
   documents: documentsRouter,
   messaging: messagingRouter,
   admin: adminRouter,
+  timeline: timelineRouter,
+  permissions: permissionsRouter,
+  outcomes: multiAgencyOutcomesRouter,
+  clientProfile: clientProfileRouter,
 });
 
 export type AppRouter = typeof appRouter;

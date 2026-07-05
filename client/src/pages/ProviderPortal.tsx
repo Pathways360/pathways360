@@ -301,7 +301,7 @@ export default function ProviderPortal() {
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <img src="/manus-storage/ChatGPTImageJul4,2026,02_27_01PM_4abfa799.png" alt="Pathways 360" className="h-8 w-auto" />
+            <img src="/manus-storage/ChatGPTImageJul4,2026,02_27_01PM_4abfa799.png" alt="Pathways 360" className="h-10 w-auto object-contain" />
             <div>
               <div className="flex items-center gap-2">
                 <Badge className={`text-xs ${ROLE_COLORS[providerRole] || "bg-gray-100 text-gray-700"}`}>{ROLE_LABELS[providerRole] || providerRole}</Badge>

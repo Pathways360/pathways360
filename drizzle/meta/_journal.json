@@ -64,6 +64,13 @@
       "when": 1783124356599,
       "tag": "0008_sturdy_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1783209549469,
+      "tag": "0009_lonely_alex_power",
+      "breakpoints": true
     }
   ]
 }

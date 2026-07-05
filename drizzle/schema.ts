@@ -551,7 +551,6 @@ export const countyResources = mysqlTable("county_resources", {
 });
 
 export type ProviderRole = typeof providerRoles.$inferSelect;
-export type ClientTimeline = typeof clientTimelines.$inferSelect;
 export type TimelineTask = typeof timelineTasks.$inferSelect;
 export type ProviderMessage = typeof providerMessages.$inferSelect;
 export type ProgressMilestone = typeof progressMilestones.$inferSelect;
@@ -737,3 +736,362 @@ export const auditLog = mysqlTable("audit_log", {
   ipAddress: varchar("ipAddress", { length: 50 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+
+// ─── 360° Client Timeline ─────────────────────────────────────────────────────
+// Chronological history visible to authorized providers with role-based access
+export const clientTimeline = mysqlTable("client_timeline", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  eventType: mysqlEnum("eventType", [
+    "appointment",
+    "case_note",
+    "milestone",
+    "medication_change",
+    "court_date",
+    "referral",
+    "housing_update",
+    "employment_progress",
+    "message",
+    "assessment",
+    "goal_update",
+    "recovery_milestone",
+    "provider_note"
+  ]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  eventDate: timestamp("eventDate").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdByRole: varchar("createdByRole", { length: 50 }),
+  visibleToRoles: text("visibleToRoles"), // JSON array of roles that can view
+  requiresConsent: boolean("requiresConsent").default(true).notNull(),
+  consentGiven: boolean("consentGiven").default(false).notNull(),
+  metadata: text("metadata"), // JSON for event-specific data
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientTimeline = typeof clientTimeline.$inferSelect;
+export type InsertClientTimeline = typeof clientTimeline.$inferInsert;
+
+// ─── Insurance Information ────────────────────────────────────────────────────
+export const clientInsurance = mysqlTable("client_insurance", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  insuranceProvider: mysqlEnum("insuranceProvider", [
+    "partnership_healthplan",
+    "medi_cal",
+    "medicare",
+    "anthem_blue_cross",
+    "kaiser_permanente",
+    "aetna",
+    "blue_shield",
+    "cigna",
+    "united_healthcare",
+    "self_pay",
+    "uninsured",
+    "other"
+  ]).notNull(),
+  insuranceId: varchar("insuranceId", { length: 100 }),
+  groupNumber: varchar("groupNumber", { length: 100 }),
+  assignedCaseManager: int("assignedCaseManager"), // userId of ECM
+  authorizationNumber: varchar("authorizationNumber", { length: 100 }),
+  priorAuthRequired: boolean("priorAuthRequired").default(false),
+  renewalDate: varchar("renewalDate", { length: 20 }),
+  coverageStatus: mysqlEnum("coverageStatus", ["active", "inactive", "pending", "terminated"]).default("active"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientInsurance = typeof clientInsurance.$inferSelect;
+export type InsertClientInsurance = typeof clientInsurance.$inferInsert;
+
+// ─── Medication Management ────────────────────────────────────────────────────
+export const clientMedications = mysqlTable("client_medications", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  medicationName: varchar("medicationName", { length: 255 }).notNull(),
+  dosage: varchar("dosage", { length: 100 }),
+  frequency: varchar("frequency", { length: 100 }),
+  prescribingPhysician: varchar("prescribingPhysician", { length: 255 }),
+  pharmacy: varchar("pharmacy", { length: 255 }),
+  complianceStatus: mysqlEnum("complianceStatus", [
+    "taking_as_prescribed",
+    "missed_occasionally",
+    "frequently_missed",
+    "unknown"
+  ]).default("unknown"),
+  medicationType: mysqlEnum("medicationType", [
+    "psychiatric",
+    "narcotic_controlled",
+    "non_narcotic",
+    "mat",
+    "over_the_counter",
+    "other"
+  ]),
+  monitoringMethod: mysqlEnum("monitoringMethod", [
+    "pill_count",
+    "daily_observation",
+    "weekly_check",
+    "monthly_review"
+  ]),
+  alerts: text("alerts"), // JSON array of medication alerts
+  startDate: varchar("startDate", { length: 20 }),
+  endDate: varchar("endDate", { length: 20 }),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientMedication = typeof clientMedications.$inferSelect;
+export type InsertClientMedication = typeof clientMedications.$inferInsert;
+
+// ─── Employment Information ───────────────────────────────────────────────────
+export const clientEmployment = mysqlTable("client_employment", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  employmentStatus: mysqlEnum("employmentStatus", [
+    "full_time",
+    "part_time",
+    "temporary",
+    "seasonal",
+    "self_employed",
+    "unemployed",
+    "looking_for_work",
+    "student",
+    "volunteer",
+    "retired"
+  ]).notNull(),
+  workEligible: boolean("workEligible"),
+  workRestrictions: text("workRestrictions"),
+  disabilityStatus: mysqlEnum("disabilityStatus", [
+    "none",
+    "temporary",
+    "permanent",
+    "pending_determination"
+  ]).default("none"),
+  receivingSSI: boolean("receivingSSI").default(false),
+  receivingSSID: boolean("receivingSSID").default(false),
+  vocationalRehabilitationEnrolled: boolean("vocationalRehabilitationEnrolled").default(false),
+  employmentGoal: text("employmentGoal"),
+  currentEmployer: varchar("currentEmployer", { length: 255 }),
+  jobTitle: varchar("jobTitle", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientEmployment = typeof clientEmployment.$inferSelect;
+export type InsertClientEmployment = typeof clientEmployment.$inferInsert;
+
+// ─── Housing Information ──────────────────────────────────────────────────────
+export const clientHousing = mysqlTable("client_housing", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  currentHousingStatus: mysqlEnum("currentHousingStatus", [
+    "unsheltered",
+    "emergency_shelter",
+    "transitional_housing",
+    "sober_living",
+    "permanent_housing",
+    "with_family",
+    "motel",
+    "institution",
+    "other"
+  ]).notNull(),
+  housingStabilityScore: int("housingStabilityScore"), // 0-100
+  housingGoal: text("housingGoal"),
+  moveInDate: varchar("moveInDate", { length: 20 }),
+  leaseExpirationDate: varchar("leaseExpirationDate", { length: 20 }),
+  landlordName: varchar("landlordName", { length: 255 }),
+  landlordContact: varchar("landlordContact", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientHousing = typeof clientHousing.$inferSelect;
+export type InsertClientHousing = typeof clientHousing.$inferInsert;
+
+// ─── Court & Probation Information ────────────────────────────────────────────
+export const clientCourt = mysqlTable("client_court", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  probationOfficerId: int("probationOfficerId"), // userId
+  probationOfficerName: varchar("probationOfficerName", { length: 255 }),
+  probationOfficerContact: varchar("probationOfficerContact", { length: 100 }),
+  courtDates: text("courtDates"), // JSON array of court dates
+  conditions: text("conditions"), // JSON array of probation conditions
+  communityServiceHours: int("communityServiceHours"),
+  communityServiceHoursCompleted: int("communityServiceHoursCompleted").default(0),
+  drugTestingRequired: boolean("drugTestingRequired").default(false),
+  curfew: varchar("curfew", { length: 255 }),
+  protectiveOrders: text("protectiveOrders"), // JSON array
+  requiredClasses: text("requiredClasses"), // JSON array
+  complianceStatus: mysqlEnum("complianceStatus", [
+    "compliant",
+    "non_compliant",
+    "pending_review"
+  ]).default("pending_review"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientCourt = typeof clientCourt.$inferSelect;
+export type InsertClientCourt = typeof clientCourt.$inferInsert;
+
+// ─── Child Welfare (CPS/CFS) Information ──────────────────────────────────────
+export const clientChildWelfare = mysqlTable("client_child_welfare", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  activeCPSCase: boolean("activeCPSCase").default(false),
+  caseWorkerId: int("caseWorkerId"), // userId
+  caseWorkerName: varchar("caseWorkerName", { length: 255 }),
+  caseWorkerContact: varchar("caseWorkerContact", { length: 100 }),
+  childrenInCustody: int("childrenInCustody").default(0),
+  visitationSchedule: text("visitationSchedule"),
+  courtHearings: text("courtHearings"), // JSON array
+  parentingClasses: text("parentingClasses"), // JSON array
+  reunificationPlan: text("reunificationPlan"),
+  requiredServices: text("requiredServices"), // JSON array
+  progressNotes: text("progressNotes"),
+  upcomingDeadlines: text("upcomingDeadlines"), // JSON array
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientChildWelfare = typeof clientChildWelfare.$inferSelect;
+export type InsertClientChildWelfare = typeof clientChildWelfare.$inferInsert;
+
+// ─── Behavioral Health Information ────────────────────────────────────────────
+export const clientBehavioralHealth = mysqlTable("client_behavioral_health", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  diagnosis: text("diagnosis"), // JSON array of diagnoses
+  mentalHealthProviderId: int("mentalHealthProviderId"), // userId
+  mentalHealthProviderName: varchar("mentalHealthProviderName", { length: 255 }),
+  therapistName: varchar("therapistName", { length: 255 }),
+  psychiatristName: varchar("psychiatristName", { length: 255 }),
+  substanceUseCounselorName: varchar("substanceUseCounselorName", { length: 255 }),
+  levelOfCare: mysqlEnum("levelOfCare", [
+    "outpatient",
+    "intensive_outpatient",
+    "partial_hospitalization",
+    "inpatient",
+    "residential"
+  ]),
+  riskLevel: mysqlEnum("riskLevel", [
+    "low",
+    "moderate",
+    "high",
+    "crisis"
+  ]).default("low"),
+  suicideRisk: boolean("suicideRisk").default(false),
+  safetyPlan: text("safetyPlan"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientBehavioralHealth = typeof clientBehavioralHealth.$inferSelect;
+export type InsertClientBehavioralHealth = typeof clientBehavioralHealth.$inferInsert;
+
+// ─── Medical Information ──────────────────────────────────────────────────────
+export const clientMedical = mysqlTable("client_medical", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  primaryCarePhysician: varchar("primaryCarePhysician", { length: 255 }),
+  primaryCarePhysicianContact: varchar("primaryCarePhysicianContact", { length: 100 }),
+  specialists: text("specialists"), // JSON array
+  medicalConditions: text("medicalConditions"), // JSON array
+  allergies: text("allergies"), // JSON array
+  emergencyContact: varchar("emergencyContact", { length: 255 }),
+  emergencyContactPhone: varchar("emergencyContactPhone", { length: 20 }),
+  hospitalizations: text("hospitalizations"), // JSON array with dates and reasons
+  upcomingAppointments: text("upcomingAppointments"), // JSON array
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientMedical = typeof clientMedical.$inferSelect;
+export type InsertClientMedical = typeof clientMedical.$inferInsert;
+
+// ─── Recovery Information ─────────────────────────────────────────────────────
+export const clientRecovery = mysqlTable("client_recovery", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  cleanDate: varchar("cleanDate", { length: 20 }),
+  primaryDrug: varchar("primaryDrug", { length: 100 }),
+  recoveryMeetings: text("recoveryMeetings"), // JSON array (type, frequency, location)
+  sponsorName: varchar("sponsorName", { length: 255 }),
+  sponsorContact: varchar("sponsorContact", { length: 100 }),
+  recoveryGoals: text("recoveryGoals"),
+  relapseHistory: text("relapseHistory"), // JSON array
+  triggers: text("triggers"), // JSON array
+  milestones: text("milestones"), // JSON array of recovery milestones
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientRecovery = typeof clientRecovery.$inferSelect;
+export type InsertClientRecovery = typeof clientRecovery.$inferInsert;
+
+// ─── Education Information ───────────────────────────────────────────────────
+export const clientEducation = mysqlTable("client_education", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(),
+  hasHighSchoolDiploma: boolean("hasHighSchoolDiploma").default(false),
+  hasGED: boolean("hasGED").default(false),
+  collegeEnrolled: boolean("collegeEnrolled").default(false),
+  tradeSchoolEnrolled: boolean("tradeSchoolEnrolled").default(false),
+  certifications: text("certifications"), // JSON array
+  currentEnrollment: varchar("currentEnrollment", { length: 255 }),
+  careerGoals: text("careerGoals"),
+  lifeGoals: text("lifeGoals"), // JSON array of life goals
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClientEducation = typeof clientEducation.$inferSelect;
+export type InsertClientEducation = typeof clientEducation.$inferInsert;
+
+// ─── Provider Permissions & Role-Based Access ────────────────────────────────
+export const providerPermissions = mysqlTable("provider_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  providerId: int("providerId").notNull(), // userId of provider
+  clientId: int("clientId").notNull(), // userId of client
+  providerRole: varchar("providerRole", { length: 50 }).notNull(), // ecm, rehabilitation, probation, housing, employment, counselor
+  permissions: text("permissions").notNull(), // JSON array of permissions
+  consentGiven: boolean("consentGiven").default(false).notNull(),
+  consentDate: timestamp("consentDate"),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProviderPermission = typeof providerPermissions.$inferSelect;
+export type InsertProviderPermission = typeof providerPermissions.$inferInsert;
+
+// ─── Multi-Agency Outcome & ROI Dashboard ─────────────────────────────────────
+export const multiAgencyOutcomes = mysqlTable("multi_agency_outcomes", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  organizationId: int("organizationId"), // if applicable
+  housingStability: boolean("housingStability").default(false),
+  treatmentEngagement: boolean("treatmentEngagement").default(false),
+  medicationAdherence: boolean("medicationAdherence").default(false),
+  appointmentAttendance: int("appointmentAttendance").default(0), // percentage
+  employmentPlacement: boolean("employmentPlacement").default(false),
+  familyReunification: boolean("familyReunification").default(false),
+  edUtilizationReduction: int("edUtilizationReduction").default(0), // percentage reduction
+  recidivismReduction: boolean("recidivismReduction").default(false),
+  costSavings: int("costSavings").default(0), // in dollars
+  grantPerformanceMetrics: text("grantPerformanceMetrics"), // JSON
+  qualityMetrics: text("qualityMetrics"), // JSON
+  programOutcomes: text("programOutcomes"), // JSON
+  reportingPeriodStart: varchar("reportingPeriodStart", { length: 20 }),
+  reportingPeriodEnd: varchar("reportingPeriodEnd", { length: 20 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MultiAgencyOutcome = typeof multiAgencyOutcomes.$inferSelect;
+export type InsertMultiAgencyOutcome = typeof multiAgencyOutcomes.$inferInsert;
