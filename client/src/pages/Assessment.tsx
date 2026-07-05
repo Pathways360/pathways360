@@ -192,9 +192,9 @@ export default function Assessment() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium text-foreground mb-2">Do you have health insurance?</p>
-              <YesNo value={data.hasHealthInsurance} onChange={v => set("hasHealthInsurance", v)} />
+              <YesNo value={data.hasHealthInsurance} onChange={v => { set("hasHealthInsurance", v); }} />
             </div>
-            {data.hasHealthInsurance && (
+            {data.hasHealthInsurance === true && (
               <div>
                 <p className="text-sm font-medium text-foreground mb-2">What type of insurance?</p>
                 <select
@@ -215,9 +215,9 @@ export default function Assessment() {
             )}
             <div>
               <p className="text-sm font-medium text-foreground mb-2">Do you take any medications?</p>
-              <YesNo value={data.takesMedication} onChange={v => set("takesMedication", v)} />
+              <YesNo value={data.takesMedication} onChange={v => { set("takesMedication", v); }} />
             </div>
-            {data.takesMedication && (
+            {data.takesMedication === true && (
               <div>
                 <p className="text-sm font-medium text-foreground mb-2">What type of medication?</p>
                 <select

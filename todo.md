@@ -283,8 +283,9 @@
 - [x] Add Work Eligibility dropdown (Eligible, Not Eligible, Limited, Unknown) - integrated into Assessment employment step
 - [x] Add Disability Status dropdown (No Disability, Temporary, Permanent, Pending, Unknown) - integrated into Assessment employment step
 - [x] Integrate dropdowns into Assessment page
-- [ ] Integrate dropdowns into Profile/Assessment pages
-- [ ] Test dropdown functionality and data persistence
+- [x] Integrate dropdowns into Profile/Assessment pages
+- [x] Test dropdown functionality and data persistence
+- [x] Fix conditional rendering for insurance and medication dropdowns (=== true check)
 
 ## Phase 24: Fix Resource Directory Search
 - [x] Implement county search filter
@@ -309,18 +310,18 @@
 - [x] Create client profile view page
 - [x] Create 360° timeline view
 - [x] Create appointments tracking section
-- [ ] Create court dates tracking section
-- [ ] Create CPS/CFS hearings tracking section
-- [ ] Create probation check-ins tracking section
-- [ ] Create medication tracking section
-- [ ] Create recovery tracking section
-- [ ] Create referral tracking section
-- [ ] Create notes section
-- [ ] Create alerts section
-- [ ] Create reminders section
-- [ ] Create messages section
-- [ ] Create agency assignments section
-- [ ] Create multi-agency collaboration view
+- [ ] Create court dates tracking section (backend integration needed)
+- [ ] Create CPS/CFS hearings tracking section (backend integration needed)
+- [ ] Create probation check-ins tracking section (backend integration needed)
+- [ ] Create medication tracking section (backend integration needed)
+- [ ] Create recovery tracking section (backend integration needed)
+- [ ] Create referral tracking section (backend integration needed)
+- [ ] Create notes section (backend integration needed)
+- [ ] Create alerts section (backend integration needed)
+- [ ] Create reminders section (backend integration needed)
+- [ ] Create messages section (backend integration needed)
+- [ ] Create agency assignments section (backend integration needed)
+- [ ] Create multi-agency collaboration view (backend integration needed)
 - [ ] Create downloadable client onboarding/profile packet feature
 - [ ] Create success page print feature (78%+ achievement only)
 
