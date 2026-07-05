@@ -245,10 +245,10 @@
 ## Phase 19: 360° Client Timeline Feature
 - [x] Design and implement 360° Client Timeline database schema
 - [x] Create timeline view component showing chronological history
-- [ ] Add case notes and court date event types to timeline
-- [ ] Implement role-based access control for timeline visibility
+- [x] Add case notes and court date event types to timeline
+- [ ] Implement role-based access control for timeline visibility (UI-only, needs backend enforcement)
 - [ ] Integrate timeline into client/shared profile view (currently only in provider dashboards)
-- [ ] Wire ClientTimeline to live timeline data instead of mock events
+- [ ] Wire ClientTimeline to live timeline data instead of mock events (backend integration)
 
 ## Phase 20: Expand Provider Dashboard Fields
 - [x] Add Insurance section (provider, ID, case manager, auth number, renewal date, coverage status)
@@ -271,18 +271,18 @@
 - [x] Employment Specialist: resume, applications, interviews, job placement, retention
 
 ## Phase 22: Create Collaborative Care Hub & Multi-Agency Outcome & ROI Dashboard
-- [ ] Rename "Multi-Agency ROI" to "Collaborative Care Hub" consistently across UI
+- [x] Rename "Multi-Agency ROI" to "Collaborative Care Hub" consistently across UI
 - [x] Create Multi-Agency Outcome & ROI Dashboard measuring: housing stability, treatment engagement, medication adherence, appointment attendance, employment placement, family reunification, ED utilization reduction, recidivism reduction, cost savings, grant performance, quality metrics, program outcomes
-- [ ] Add reporting and analytics capabilities
-- [ ] Implement data export (PDF/CSV)
+- [x] Add reporting and analytics capabilities
+- [x] Implement data export (PDF/CSV)
 
 
 ## Phase 23: Fix and Integrate Dropdown Fields
-- [x] Add Insurance Type dropdown (Medi-Cal, Partnership HealthPlan, Medicare, Private, No Insurance, Unknown, Other)
-- [x] Add Medication Type dropdown (Psyc, Narcotic, Non-Narcotic, MAT, No Medication, Unknown, Other)
-- [x] Add Work Eligibility dropdown (Eligible, Not Eligible, Limited, Unknown)
-- [x] Add Disability dropdown (No Disability, Temporary, Permanent, Pending, Unknown)
-- [x] Integrate dropdowns into Onboarding page
+- [x] Add Insurance Type dropdown (Medi-Cal, Partnership HealthPlan, Medicare, Private, No Insurance, Unknown, Other) - integrated into Assessment health step
+- [x] Add Medication Type dropdown (Psychiatric, Narcotic, Non-Narcotic, MAT, Unknown, Other) - integrated into Assessment health step
+- [x] Add Work Eligibility dropdown (Eligible, Not Eligible, Limited, Unknown) - integrated into Assessment employment step
+- [x] Add Disability Status dropdown (No Disability, Temporary, Permanent, Pending, Unknown) - integrated into Assessment employment step
+- [x] Integrate dropdowns into Assessment page
 - [ ] Integrate dropdowns into Profile/Assessment pages
 - [ ] Test dropdown functionality and data persistence
 

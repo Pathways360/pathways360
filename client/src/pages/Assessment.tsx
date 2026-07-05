@@ -15,13 +15,16 @@ import {
 type AssessmentData = {
   housingStatus?: string;
   employmentStatus?: string;
+  workEligibility?: string;
+  disability?: string;
   hasIncome?: boolean;
   incomeSource?: string;
   hasHealthInsurance?: boolean;
   insuranceType?: string;
+  takesMedication?: boolean;
+  medicationType?: string;
   hasMedicalConditions?: boolean;
   medicalConditions?: string;
-  takesMedication?: boolean;
   hasDentalNeeds?: boolean;
   hasVisionNeeds?: boolean;
   mentalHealthStatus?: string;
@@ -150,6 +153,35 @@ export default function Assessment() {
               </div>
             </div>
             <div>
+              <p className="text-sm font-medium text-foreground mb-2">Are you work eligible?</p>
+              <select
+                value={data.workEligibility || ""}
+                onChange={e => set("workEligibility", e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal"
+              >
+                <option value="">Select work eligibility...</option>
+                <option value="Eligible">Eligible</option>
+                <option value="Not Eligible">Not Eligible</option>
+                <option value="Limited">Limited</option>
+                <option value="Unknown">Unknown</option>
+              </select>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground mb-2">Do you have a disability?</p>
+              <select
+                value={data.disability || ""}
+                onChange={e => set("disability", e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal"
+              >
+                <option value="">Select disability status...</option>
+                <option value="No Disability">No Disability</option>
+                <option value="Temporary">Temporary</option>
+                <option value="Permanent">Permanent</option>
+                <option value="Pending">Pending</option>
+                <option value="Unknown">Unknown</option>
+              </select>
+            </div>
+            <div>
               <p className="text-sm font-medium text-foreground mb-2">Do you have any income right now?</p>
               <YesNo value={data.hasIncome} onChange={v => set("hasIncome", v)} />
             </div>
@@ -162,10 +194,48 @@ export default function Assessment() {
               <p className="text-sm font-medium text-foreground mb-2">Do you have health insurance?</p>
               <YesNo value={data.hasHealthInsurance} onChange={v => set("hasHealthInsurance", v)} />
             </div>
+            {data.hasHealthInsurance && (
+              <div>
+                <p className="text-sm font-medium text-foreground mb-2">What type of insurance?</p>
+                <select
+                  value={data.insuranceType || ""}
+                  onChange={e => set("insuranceType", e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                >
+                  <option value="">Select insurance type...</option>
+                  <option value="Medi-Cal">Medi-Cal</option>
+                  <option value="Partnership HealthPlan">Partnership HealthPlan</option>
+                  <option value="Medicare">Medicare</option>
+                  <option value="Private">Private Insurance</option>
+                  <option value="No Insurance">No Insurance</option>
+                  <option value="Unknown">Unknown</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            )}
             <div>
               <p className="text-sm font-medium text-foreground mb-2">Do you take any medications?</p>
               <YesNo value={data.takesMedication} onChange={v => set("takesMedication", v)} />
             </div>
+            {data.takesMedication && (
+              <div>
+                <p className="text-sm font-medium text-foreground mb-2">What type of medication?</p>
+                <select
+                  value={data.medicationType || ""}
+                  onChange={e => set("medicationType", e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                >
+                  <option value="">Select medication type...</option>
+                  <option value="Psychiatric">Psychiatric</option>
+                  <option value="Narcotic">Narcotic</option>
+                  <option value="Non-Narcotic">Non-Narcotic</option>
+                  <option value="MAT">MAT (Medication-Assisted Treatment)</option>
+                  <option value="No Medication">No Medication</option>
+                  <option value="Unknown">Unknown</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            )}
             <div>
               <p className="text-sm font-medium text-foreground mb-3">How would you describe your mental health right now?</p>
               <div className="space-y-2">

@@ -8,7 +8,7 @@ import {
 interface TimelineEvent {
   id: number;
   date: string;
-  type: "appointment" | "note" | "milestone" | "goal" | "medication" | "referral" | "housing" | "employment" | "education" | "message" | "achievement" | "alert";
+  type: "appointment" | "note" | "milestone" | "goal" | "medication" | "referral" | "housing" | "employment" | "education" | "message" | "achievement" | "alert" | "case_note" | "court_date" | "assessment" | "goal_update";
   title: string;
   description: string;
   createdBy: string;
@@ -97,6 +97,42 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     createdBy: "Sarah Johnson",
     visibleToRoles: ["case_manager", "ecm_worker", "client"],
   },
+  {
+    id: 10,
+    date: "2026-07-05",
+    type: "case_note",
+    title: "Case Note: Monthly Progress Review",
+    description: "James continues to demonstrate strong commitment to his goals. All milestones on track. Recommended continuation of current support plan.",
+    createdBy: "Sarah Johnson",
+    visibleToRoles: ["case_manager", "ecm_worker"],
+  },
+  {
+    id: 11,
+    date: "2026-07-10",
+    type: "court_date",
+    title: "Court Hearing - Probation Review",
+    description: "Probation review hearing scheduled. James to present progress report on employment and housing stability.",
+    createdBy: "Probation Officer",
+    visibleToRoles: ["case_manager", "probation_officer", "client"],
+  },
+  {
+    id: 12,
+    date: "2026-07-03",
+    type: "assessment",
+    title: "Assessment: 6-Month Progress Evaluation",
+    description: "Comprehensive 6-month assessment completed. Overall progress: 85%. Strengths in employment and housing. Areas for growth: financial literacy.",
+    createdBy: "Sarah Johnson",
+    visibleToRoles: ["case_manager", "ecm_worker", "client"],
+  },
+  {
+    id: 13,
+    date: "2026-06-28",
+    type: "goal_update",
+    title: "Goal Update: Employment Goal",
+    description: "Employment goal progress updated to 95%. James has exceeded initial 6-month employment target.",
+    createdBy: "Employment Specialist",
+    visibleToRoles: ["case_manager", "employment_specialist", "client"],
+  },
 ];
 
 const getEventIcon = (type: string) => {
@@ -125,6 +161,14 @@ const getEventIcon = (type: string) => {
       return <Award className="w-4 h-4" />;
     case "alert":
       return <AlertCircle className="w-4 h-4" />;
+    case "case_note":
+      return <FileText className="w-4 h-4" />;
+    case "court_date":
+      return <Calendar className="w-4 h-4" />;
+    case "assessment":
+      return <CheckCircle className="w-4 h-4" />;
+    case "goal_update":
+      return <CheckCircle className="w-4 h-4" />;
     default:
       return <FileText className="w-4 h-4" />;
   }
@@ -156,6 +200,14 @@ const getEventColor = (type: string) => {
       return "bg-yellow-100 text-yellow-700 border-yellow-200";
     case "alert":
       return "bg-red-100 text-red-700 border-red-200";
+    case "case_note":
+      return "bg-slate-100 text-slate-700 border-slate-200";
+    case "court_date":
+      return "bg-red-100 text-red-700 border-red-200";
+    case "assessment":
+      return "bg-cyan-100 text-cyan-700 border-cyan-200";
+    case "goal_update":
+      return "bg-teal-100 text-teal-700 border-teal-200";
     default:
       return "bg-gray-100 text-gray-700 border-gray-200";
   }
@@ -163,9 +215,15 @@ const getEventColor = (type: string) => {
 
 interface ClientTimelineProps {
   clientId: number;
+  userRole?: string;
 }
 
-export default function ClientTimeline({ clientId }: ClientTimelineProps) {
+export default function ClientTimeline({ clientId, userRole = "client" }: ClientTimelineProps) {
+  // Filter events based on user role visibility
+  const visibleEvents = DEMO_TIMELINE.filter(event => 
+    event.visibleToRoles.includes(userRole) || event.visibleToRoles.includes("client")
+  );
+
   return (
     <div className="space-y-4">
       <div>
@@ -180,7 +238,12 @@ export default function ClientTimeline({ clientId }: ClientTimelineProps) {
 
         {/* Timeline Events */}
         <div className="space-y-4">
-          {DEMO_TIMELINE.map((event, index) => (
+          {visibleEvents.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No timeline events visible for your role</p>
+            </div>
+          ) : (
+            visibleEvents.map((event, index) => (
             <div key={event.id} className="relative pl-16">
               {/* Timeline Dot */}
               <div className={`absolute left-0 top-2 w-12 h-12 rounded-full border-4 border-white flex items-center justify-center ${getEventColor(event.type)}`}>
@@ -212,7 +275,8 @@ export default function ClientTimeline({ clientId }: ClientTimelineProps) {
                 </CardContent>
               </Card>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

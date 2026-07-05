@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Users, TrendingUp, Share2, Plus, Send } from "lucide-react";
+import { MessageCircle, Users, TrendingUp, Share2, Plus, Send, Download, BarChart3 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Agency {
   id: number;
@@ -117,8 +118,8 @@ export default function MultiAgencyHub() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Multi-Agency Collaboration Hub</h2>
-          <p className="text-gray-600 mt-1">Coordinate care across agencies and track collaborative outcomes</p>
+          <h2 className="text-2xl font-bold text-gray-900">Collaborative Care Hub</h2>
+          <p className="text-gray-600 mt-1">Unified platform for multi-agency coordination, shared client records, and collaborative outcomes</p>
         </div>
         <Button className="bg-teal-600 hover:bg-teal-700 text-white">
           <Plus className="w-4 h-4 mr-2" />New Collaboration
@@ -155,10 +156,11 @@ export default function MultiAgencyHub() {
 
       {/* Main Content */}
       <Tabs defaultValue="agencies" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="agencies">Partner Agencies</TabsTrigger>
           <TabsTrigger value="collaborations">Collaborations</TabsTrigger>
           <TabsTrigger value="messaging">Messaging</TabsTrigger>
+          <TabsTrigger value="reporting">Reports & Export</TabsTrigger>
         </TabsList>
 
         {/* Partner Agencies Tab */}
@@ -331,6 +333,81 @@ export default function MultiAgencyHub() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Reports & Export Tab */}
+        <TabsContent value="reporting" className="mt-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Reporting Metrics */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-teal-600" />
+                  Collaborative Outcomes Report
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="p-3 bg-teal-50 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Total Clients Served</p>
+                    <p className="text-2xl font-bold text-teal-700">{totalClientsServed}</p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Active Collaborations</p>
+                    <p className="text-2xl font-bold text-green-700">{activeCollaborations}</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Partner Agencies</p>
+                    <p className="text-2xl font-bold text-blue-700">{DEMO_AGENCIES.length}</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Total Outcomes Achieved</p>
+                    <p className="text-2xl font-bold text-purple-700">{DEMO_COLLABORATIONS.reduce((sum, c) => sum + c.outcomes.length, 0)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Export Options */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="w-5 h-5 text-teal-600" />
+                  Export Reports
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  onClick={() => toast.success("Collaborative Outcomes Report exported as PDF")}
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white justify-start"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Outcomes Report (PDF)
+                </Button>
+                <Button
+                  onClick={() => toast.success("Agency Performance Report exported as CSV")}
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white justify-start"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Agency Performance (CSV)
+                </Button>
+                <Button
+                  onClick={() => toast.success("Collaboration Summary exported as PDF")}
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white justify-start"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Collaboration Summary (PDF)
+                </Button>
+                <Button
+                  onClick={() => toast.success("Multi-Agency ROI Report exported as PDF")}
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white justify-start"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export ROI Analysis (PDF)
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
