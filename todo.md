@@ -237,40 +237,159 @@
 - [x] Test footer responsiveness on mobile and desktop
 
 ## Phase 18: Fix Distorted Logos & Add Footer Enhancements
-- [ ] Fix distorted logos in Home.tsx, DashboardLayout.tsx, ProviderPortal.tsx (resize/replace)
-- [ ] Add social media links to Footer component (LinkedIn, Twitter, Facebook)
-- [ ] Create About page and link from footer
-- [ ] Add newsletter signup form to footer
+- [x] Fix distorted logos in Home.tsx, DashboardLayout.tsx, ProviderPortal.tsx (resize/replace)
+- [x] Add social media links to Footer component (LinkedIn, Twitter, Facebook)
+- [x] Create About page and link from footer
+- [x] Add newsletter signup form to footer
 
 ## Phase 19: 360° Client Timeline Feature
-- [ ] Design and implement 360° Client Timeline database schema
+- [x] Design and implement 360° Client Timeline database schema
 - [ ] Create timeline view component showing chronological history
 - [ ] Add appointments, case notes, milestones, medication changes, court dates, referrals, housing updates, employment progress, messages
 - [ ] Implement role-based access control for timeline visibility
 - [ ] Integrate timeline into provider dashboards and client profile
 
 ## Phase 20: Expand Provider Dashboard Fields
-- [ ] Add Insurance section (provider, ID, case manager, auth number, renewal date, coverage status)
-- [ ] Add Medication Management (current meds, compliance, type, monitoring, alerts)
-- [ ] Add Employment section (status, work eligible, restrictions, disability, SSI/SSDI, vocational rehab, goals)
-- [ ] Add Housing section (current housing, stability score, goals)
-- [ ] Add Court/Probation section (officer, dates, conditions, service hours, drug testing, compliance)
-- [ ] Add Child Welfare section (CPS case, case worker, custody, visitation, court hearings, reunification)
-- [ ] Add Behavioral Health section (diagnosis, providers, level of care, risk, safety plan)
-- [ ] Add Medical section (PCP, specialists, conditions, allergies, emergency contact, hospitalizations)
-- [ ] Add Recovery section (clean date, primary drug, meetings, sponsor, goals, relapse history, triggers)
-- [ ] Add Education section (diploma, GED, college, trade school, certifications, enrollment, career goals)
-- [ ] Add Life Goals section (housing, employment, driver license, transportation, family reunification, financial, education, recovery, health, legal)
+- [x] Add Insurance section (provider, ID, case manager, auth number, renewal date, coverage status)
+- [x] Add Medication Management (current meds, compliance, type, monitoring, alerts)
+- [x] Add Employment section (status, work eligible, restrictions, disability, SSI/SSDI, vocational rehab, goals)
+- [x] Add Housing section (current housing, stability score, goals)
+- [x] Add Court/Probation section (officer, dates, conditions, service hours, drug testing, compliance)
+- [x] Add Child Welfare section (CPS case, case worker, custody, visitation, court hearings, reunification)
+- [x] Add Behavioral Health section (diagnosis, providers, level of care, risk, safety plan)
+- [x] Add Medical section (PCP, specialists, conditions, allergies, emergency contact, hospitalizations)
+- [x] Add Recovery section (clean date, primary drug, meetings, sponsor, goals, relapse history, triggers)
+- [x] Add Education section (diploma, GED, college, trade school, certifications, enrollment, career goals)
+- [x] Add Life Goals section (housing, employment, driver license, transportation, family reunification, financial, education, recovery, health, legal)
 
 ## Phase 21: Implement Role-Based Permissions
-- [ ] ECM: wellness, appointments, care plans, insurance authorizations, SDOH, utilization, outcomes, approvals, ROI reporting
-- [ ] Rehabilitation Centers: attendance, drug tests, progress notes, treatment completion, aftercare
-- [ ] Probation: compliance, court reminders, community service, drug testing, violations, incentives
-- [ ] Housing Provider: move-in status, lease compliance, inspections, rent assistance, stability tracking
-- [ ] Employment Specialist: resume, applications, interviews, job placement, retention
+- [x] ECM: wellness, appointments, care plans, insurance authorizations, SDOH, utilization, outcomes, approvals, ROI reporting
+- [x] Rehabilitation Centers: attendance, drug tests, progress notes, treatment completion, aftercare
+- [x] Probation: compliance, court reminders, community service, drug testing, violations, incentives
+- [x] Housing Provider: move-in status, lease compliance, inspections, rent assistance, stability tracking
+- [x] Employment Specialist: resume, applications, interviews, job placement, retention
 
 ## Phase 22: Create Collaborative Care Hub & Multi-Agency Outcome & ROI Dashboard
 - [ ] Rename "Multi-Agency ROI" to "Collaborative Care Hub"
-- [ ] Create Multi-Agency Outcome & ROI Dashboard measuring: housing stability, treatment engagement, medication adherence, appointment attendance, employment placement, family reunification, ED utilization reduction, recidivism reduction, cost savings, grant performance, quality metrics, program outcomes
+- [x] Create Multi-Agency Outcome & ROI Dashboard measuring: housing stability, treatment engagement, medication adherence, appointment attendance, employment placement, family reunification, ED utilization reduction, recidivism reduction, cost savings, grant performance, quality metrics, program outcomes
 - [ ] Add reporting and analytics capabilities
 - [ ] Implement data export (PDF/CSV)
+
+
+## Phase 23: Fix and Integrate Dropdown Fields
+- [x] Add Insurance Type dropdown (Medi-Cal, Partnership HealthPlan, Medicare, Private, No Insurance, Unknown, Other)
+- [x] Add Medication Type dropdown (Psyc, Narcotic, Non-Narcotic, MAT, No Medication, Unknown, Other)
+- [x] Add Work Eligibility dropdown (Eligible, Not Eligible, Limited, Unknown)
+- [x] Add Disability dropdown (No Disability, Temporary, Permanent, Pending, Unknown)
+- [x] Integrate dropdowns into Onboarding page
+- [ ] Integrate dropdowns into Profile/Assessment pages
+- [ ] Test dropdown functionality and data persistence
+
+## Phase 24: Fix Resource Directory Search
+- [x] Implement county search filter
+- [x] Implement city search filter
+- [x] Implement category filter (food banks, meals, clothing, laundry, shelter, detox, treatment, MAT, mental health, probation, CPS, court, transportation, employment, ID help, medical, emergency)
+- [x] Implement urgency filter
+- [x] Implement need type filter
+- [x] Test search and filter combinations
+- [x] Verify resource results display correctly
+
+## Phase 25: Fix Login Flow and Role-Based Routing
+- [x] Fix login backend detection
+- [x] Implement client → client dashboard routing
+- [x] Implement license holder → license holder dashboard routing
+- [x] Implement agency staff → agency dashboard routing
+- [x] Implement professional (probation/court/CPS/CFS) → professional dashboard routing
+- [x] Implement admin → admin dashboard routing
+- [x] Test all role-based redirects
+
+## Phase 26: Build Backend Dashboard (Core)
+- [ ] Create client list view with search/filter
+- [ ] Create client profile view page
+- [ ] Create 360° timeline view
+- [ ] Create appointments tracking section
+- [ ] Create court dates tracking section
+- [ ] Create CPS/CFS hearings tracking section
+- [ ] Create probation check-ins tracking section
+- [ ] Create medication tracking section
+- [ ] Create recovery tracking section
+- [ ] Create referral tracking section
+- [ ] Create notes section
+- [ ] Create alerts section
+- [ ] Create reminders section
+- [ ] Create messages section
+- [ ] Create agency assignments section
+- [ ] Create multi-agency collaboration view
+- [ ] Create downloadable client onboarding/profile packet feature
+- [ ] Create success page print feature (78%+ achievement only)
+
+## Phase 27: Build Communication Tools
+- [ ] Implement staff-to-client messaging
+- [ ] Implement staff-to-staff messaging
+- [ ] Implement referral messages
+- [ ] Implement appointment reminders
+- [ ] Implement court reminders
+- [ ] Implement medication reminders
+- [ ] Implement recovery milestone alerts
+- [ ] Implement missed appointment alerts
+- [ ] Implement ROI expiration alerts
+- [ ] Implement task assignment alerts
+
+## Phase 28: Build Referral System
+- [ ] Create referral creation form
+- [ ] Implement referral sending
+- [ ] Create referral status tracking
+- [ ] Implement referral accepted status
+- [ ] Implement referral pending status
+- [ ] Implement referral denied status
+- [ ] Implement referral completed status
+- [ ] Add referral notes field
+- [ ] Add agency receiving referral field
+- [ ] Attach client consent/ROI to referral
+
+## Phase 29: Build Notes System
+- [ ] Implement private staff notes
+- [ ] Implement shared agency notes
+- [ ] Implement client-visible notes
+- [ ] Implement court/probation/CPS/CFS notes
+- [ ] Implement medical/medication notes
+- [ ] Implement recovery notes
+- [ ] Add author, agency, timestamp, visibility level, permission status to all notes
+
+## Phase 30: Build ROI and Permission Controls
+- [ ] Implement ROI permission requirement for all data access
+- [ ] Create client profile permission display (agencies, view permissions, expiration)
+- [ ] Implement access blocking for expired/revoked/missing ROI
+- [ ] Add ROI expiration tracking
+- [ ] Add ROI revocation functionality
+- [ ] Implement permission audit logging
+
+## Phase 31: Build Multi-Agency Collaboration Feature
+- [ ] Create multi-agency compact view
+- [ ] Show assigned agencies
+- [ ] Show assigned workers
+- [ ] Show shared goals
+- [ ] Show shared notes
+- [ ] Show referrals
+- [ ] Show appointments
+- [ ] Show court requirements
+- [ ] Show CPS/CFS requirements
+- [ ] Show probation requirements
+- [ ] Show medication support
+- [ ] Show recovery milestones
+
+## Phase 32: Comprehensive Testing and Bug Fixes
+- [ ] Test all role-based logins
+- [ ] Test all dashboard routes
+- [ ] Test all dropdowns
+- [ ] Test resource search functionality
+- [ ] Test referral workflow
+- [ ] Test notes system
+- [ ] Test alerts and reminders
+- [ ] Test ROI permissions
+- [ ] Test download/print features
+- [ ] Fix broken links
+- [ ] Fix missing pages
+- [ ] Fix non-working buttons
+- [ ] Verify mobile-friendly design
+- [ ] Verify plain language and accessibility

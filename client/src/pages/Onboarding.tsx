@@ -21,6 +21,10 @@ const COUNTIES = ["Butte","Shasta","Trinity","Tehama","Humboldt","Siskiyou","Oth
 const HOUSING_OPTIONS = ["Stably Housed","Unstably Housed","Couch Surfing","Shelter","Transitional Housing","Vehicle","Unsheltered/Outdoors","Other"];
 const EMPLOYMENT_OPTIONS = ["Employed Full-Time","Employed Part-Time","Unemployed - Seeking Work","Unemployed - Not Seeking","Disabled","Student","Retired","Other"];
 const INSURANCE_OPTIONS = ["Medi-Cal","Medicare","Private Insurance","VA Benefits","None","Unknown"];
+const INSURANCE_TYPE_OPTIONS = ["Medi-Cal","Partnership HealthPlan","Medicare","Private Insurance","No Insurance","Unknown","Other"];
+const MEDICATION_TYPE_OPTIONS = ["Psychiatric Medications","Narcotic Medication","Non-Narcotic Medication","MAT Medication","No Medication","Unknown","Other"];
+const WORK_ELIGIBILITY_OPTIONS = ["Eligible to Work","Not Eligible to Work","Limited Eligibility","Unknown"];
+const DISABILITY_OPTIONS = ["No Disability","Temporary Disability","Permanent Disability","Pending Disability","Unknown"];
 const LANGUAGE_OPTIONS = ["English","Spanish","Hmong","Tagalog","Vietnamese","Other"];
 
 export default function Onboarding() {
@@ -35,6 +39,10 @@ export default function Onboarding() {
     employmentStatus: "", onProbationOrParole: false, probationCounty: "",
     emergencyContactName: "", emergencyContactPhone: "", emergencyContactRelation: "",
     hasTransportation: false,
+    insuranceTypeDropdown: "",
+    medicationTypeDropdown: "",
+    workEligibilityDropdown: "",
+    disabilityStatusDropdown: "",
   });
 
   const upsertMutation = trpc.profile.upsert.useMutation({
@@ -152,9 +160,15 @@ export default function Onboarding() {
           {step === 3 && (
             <>
               <div><Label>Insurance Type</Label>
-                <Select value={form.insuranceType} onValueChange={v => set("insuranceType", v)}>
-                  <SelectTrigger><SelectValue placeholder="Select insurance" /></SelectTrigger>
-                  <SelectContent>{INSURANCE_OPTIONS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                <Select value={form.insuranceTypeDropdown} onValueChange={v => set("insuranceTypeDropdown", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select insurance type" /></SelectTrigger>
+                  <SelectContent>{INSURANCE_TYPE_OPTIONS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Medication Type</Label>
+                <Select value={form.medicationTypeDropdown} onValueChange={v => set("medicationTypeDropdown", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select medication type" /></SelectTrigger>
+                  <SelectContent>{MEDICATION_TYPE_OPTIONS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="flex items-center gap-3 p-3 border rounded-xl">
@@ -180,6 +194,18 @@ export default function Onboarding() {
                 <Select value={form.employmentStatus} onValueChange={v => set("employmentStatus", v)}>
                   <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
                   <SelectContent>{EMPLOYMENT_OPTIONS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Work Eligibility</Label>
+                <Select value={form.workEligibilityDropdown} onValueChange={v => set("workEligibilityDropdown", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select work eligibility" /></SelectTrigger>
+                  <SelectContent>{WORK_ELIGIBILITY_OPTIONS.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Disability Status</Label>
+                <Select value={form.disabilityStatusDropdown} onValueChange={v => set("disabilityStatusDropdown", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select disability status" /></SelectTrigger>
+                  <SelectContent>{DISABILITY_OPTIONS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="flex items-center gap-3 p-3 border rounded-xl">

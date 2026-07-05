@@ -8,6 +8,7 @@ import {
   MessageCircle, BookOpen, Award
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const FEATURES = [
   {
@@ -65,7 +66,7 @@ export default function Home() {
 
   const handleGetStarted = () => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/portal-redirect");
     } else {
       window.location.href = getLoginUrl();
     }
@@ -81,7 +82,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
-              <Button size="sm" onClick={() => navigate("/dashboard")} className="gradient-brand text-white border-0 text-xs sm:text-sm">
+              <Button size="sm" onClick={() => navigate("/portal-redirect")} className="gradient-brand text-white border-0 text-xs sm:text-sm">
                 <span className="hidden sm:inline">Go to </span>Dashboard
               </Button>
             ) : (

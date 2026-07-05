@@ -1694,7 +1694,7 @@ const timelineRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
-      const [result] = await db.insert(clientTimeline).values({
+      await db.insert(clientTimeline).values({
         clientUserId: input.clientId,
         eventType: input.eventType,
         title: input.title,
@@ -1706,7 +1706,7 @@ const timelineRouter = router({
         metadata: JSON.stringify(input.metadata || {}),
         consentGiven: true,
       });
-      return result;
+      return { success: true };
     }),
 });
 
@@ -1892,7 +1892,7 @@ const clientProfileRouter = router({
   updateInsurance: protectedProcedure
     .input(z.object({
       clientId: z.number(),
-      insuranceProvider: z.string(),
+      insuranceProvider: z.enum(["partnership_healthplan", "medi_cal", "medicare", "anthem_blue_cross", "kaiser_permanente", "aetna", "blue_shield", "cigna", "united_healthcare", "self_pay", "uninsured", "other"]),
       insuranceId: z.string().optional(),
       groupNumber: z.string().optional(),
       authorizationNumber: z.string().optional(),
