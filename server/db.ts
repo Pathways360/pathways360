@@ -1,6 +1,6 @@
-import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, jobPostings, jobApplications, recommendations, feedItems, feedInteractions, serviceProviders, serviceSchedules, biDirectionalReferrals } from "../drizzle/schema";
+import { InsertUser, users, jobPostings, jobApplications, recommendations, feedItems, feedInteractions, serviceProviders, serviceSchedules, biDirectionalReferrals, achievements, certificates, certificateTemplates, achievementBadges, goals } from "../drizzle/schema";
+import { desc, eq, and, sql } from "drizzle-orm";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -267,4 +267,222 @@ export async function sendReferralReminder(referralId: number, reminderMethod: s
   return db.update(biDirectionalReferrals)
     .set(updateData)
     .where(eq(biDirectionalReferrals.id, referralId));
+}
+
+
+// ─── Achievements & Certificates ──────────────────────────────────────────────
+export async function checkAchievementEligibility(clientId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const goalsData = await db
+    .select({
+      id: goals.id,
+      title: goals.title,
+      status: goals.status,
+    })
+    .from(goals)
+    .where(eq(goals.userId, clientId));
+
+  const eligible = [];
+  for (const goal of goalsData) {
+    // For now, assume 78% completion for demonstration
+    // In production, calculate from milestones or progress tracking
+    const completionPercentage = 85;
+    if (completionPercentage >= 78) {
+      eligible.push({
+        goalId: goal.id,
+        title: goal.title,
+        completionPercentage,
+        achievementType: "goal_completion",
+      });
+    }
+  }
+  return eligible;
+}
+
+export async function createAchievement(
+  clientId: number,
+  achievementType: string,
+  title: string,
+  description: string,
+  completionPercentage: number,
+  goalId?: number,
+  milestoneId?: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const isEligible = completionPercentage >= 78;
+  const result = await db.insert(achievements).values({
+    clientId,
+    achievementType: achievementType as any,
+    title,
+    description,
+    completionPercentage,
+    goalId,
+    milestoneId,
+    isEligibleForCertificate: isEligible,
+  });
+  return result;
+}
+
+export async function getClientAchievements(clientId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(achievements)
+    .where(eq(achievements.clientId, clientId))
+    .orderBy(desc(achievements.earnedAt));
+}
+
+export async function getEligibleAchievements(clientId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(achievements)
+    .where(
+      and(
+        eq(achievements.clientId, clientId),
+        eq(achievements.isEligibleForCertificate, true),
+        eq(achievements.certificateGenerated, false)
+      )
+    );
+}
+
+export async function createCertificate(
+  clientId: number,
+  achievementId: number,
+  title: string,
+  description: string,
+  completionPercentage: number,
+  clientName: string,
+  certificateNumber: string,
+  verificationCode: string,
+  pdfUrl: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(certificates).values({
+    clientId,
+    achievementId,
+    title,
+    description,
+    completionPercentage,
+    clientName,
+    certificateNumber,
+    verificationCode,
+    pdfUrl,
+    issuerName: "Pathways 360",
+    issuerTitle: "Program Coordinator",
+  });
+  return result;
+}
+
+export async function getCertificate(certificateId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(certificates).where(eq(certificates.id, certificateId)).limit(1);
+}
+
+export async function getClientCertificates(clientId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(certificates)
+    .where(eq(certificates.clientId, clientId))
+    .orderBy(desc(certificates.issuedDate));
+}
+
+export async function updateCertificateViewCount(certificateId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .update(certificates)
+    .set({
+      viewCount: sql`${certificates.viewCount} + 1`,
+      lastViewedAt: new Date(),
+    })
+    .where(eq(certificates.id, certificateId));
+}
+
+export async function updateCertificateDownloadCount(certificateId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .update(certificates)
+    .set({
+      downloadCount: sql`${certificates.downloadCount} + 1`,
+      lastDownloadedAt: new Date(),
+    })
+    .where(eq(certificates.id, certificateId));
+}
+
+export async function updateCertificatePrintCount(certificateId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .update(certificates)
+    .set({
+      printCount: sql`${certificates.printCount} + 1`,
+      lastPrintedAt: new Date(),
+    })
+    .where(eq(certificates.id, certificateId));
+}
+
+export async function getCertificateTemplate(achievementType: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(certificateTemplates)
+    .where(
+      and(
+        eq(certificateTemplates.achievementType, achievementType as any),
+        eq(certificateTemplates.isActive, true)
+      )
+    )
+    .limit(1);
+}
+
+export async function createAchievementBadge(
+  clientId: number,
+  badgeType: string,
+  title: string,
+  description: string,
+  iconUrl: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.insert(achievementBadges).values({
+    clientId,
+    badgeType: badgeType as any,
+    title,
+    description,
+    iconUrl,
+  });
+}
+
+export async function getClientBadges(clientId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(achievementBadges)
+    .where(eq(achievementBadges.clientId, clientId))
+    .orderBy(desc(achievementBadges.unlockedAt));
 }

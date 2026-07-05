@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { createHeartbeatJob, deleteHeartbeatJob } from "./_core/heartbeat";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
+import { achievementsRouter } from "./routers/achievements";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
@@ -2209,6 +2210,7 @@ export const appRouter = router({
   postAssessmentRecommendations: postAssessmentRecommendationsRouter,
   liveFeed: liveFeedRouter,
   biDirectionalReferrals: biDirectionalReferralsRouter,
+  achievements: achievementsRouter,
 });
 
 export type AppRouter = typeof appRouter;

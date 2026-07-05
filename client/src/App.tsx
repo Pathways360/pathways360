@@ -54,6 +54,7 @@ import { JobBoard } from "./pages/JobBoard";
 import { LiveFeedDashboard } from "./pages/LiveFeedDashboard";
 import { RecommendationsDashboard } from "./pages/RecommendationsDashboard";
 import { ReferralsDashboard } from "./pages/ReferralsDashboard";
+import Achievements from "./pages/Achievements";
 
 // ─── Session Timeout (30 min inactivity) ─────────────────────────────────────
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -177,6 +178,7 @@ function Router() {
       <Route path="/live-feed" component={LiveFeedDashboard} />
       <Route path="/recommendations" component={RecommendationsDashboard} />
       <Route path="/referrals" component={ReferralsDashboard} />
+      <Route path="/achievements" component={Achievements} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

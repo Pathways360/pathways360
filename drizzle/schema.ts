@@ -1398,3 +1398,119 @@ export const biDirectionalReferrals = mysqlTable("bi_directional_referrals", {
 
 export type BiDirectionalReferral = typeof biDirectionalReferrals.$inferSelect;
 export type InsertBiDirectionalReferral = typeof biDirectionalReferrals.$inferInsert;
+
+
+// ─── Achievements & Certificates ──────────────────────────────────────────────
+export const achievements = mysqlTable("achievements", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  achievementType: mysqlEnum("achievementType", [
+    "goal_completion",
+    "milestone_reached",
+    "sobriety_milestone",
+    "employment_secured",
+    "housing_secured",
+    "family_reunification",
+    "court_compliance",
+    "education_completed",
+    "recovery_program_completed",
+    "custom"
+  ]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  goalId: int("goalId"),
+  milestoneId: int("milestoneId"),
+  completionPercentage: int("completionPercentage").notNull(), // 0-100
+  isEligibleForCertificate: boolean("isEligibleForCertificate").default(false).notNull(), // true if >= 78%
+  certificateGenerated: boolean("certificateGenerated").default(false).notNull(),
+  certificateId: int("certificateId"),
+  earnedAt: timestamp("earnedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = typeof achievements.$inferInsert;
+
+export const certificates = mysqlTable("certificates", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  achievementId: int("achievementId").notNull(),
+  certificateNumber: varchar("certificateNumber", { length: 50 }).notNull().unique(), // Format: CERT-YYYY-XXXXX
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  completionPercentage: int("completionPercentage").notNull(),
+  clientName: varchar("clientName", { length: 255 }).notNull(),
+  issuedDate: timestamp("issuedDate").defaultNow().notNull(),
+  expirationDate: timestamp("expirationDate"), // null = no expiration
+  issuerName: varchar("issuerName", { length: 255 }).notNull().default("Pathways 360"),
+  issuerTitle: varchar("issuerTitle", { length: 255 }).default("Program Coordinator"),
+  signatureUrl: varchar("signatureUrl", { length: 500 }), // URL to signature image
+  pdfUrl: varchar("pdfUrl", { length: 500 }), // URL to generated PDF
+  verificationCode: varchar("verificationCode", { length: 50 }).notNull().unique(), // For verification
+  isVerified: boolean("isVerified").default(false).notNull(),
+  viewCount: int("viewCount").default(0).notNull(),
+  downloadCount: int("downloadCount").default(0).notNull(),
+  printCount: int("printCount").default(0).notNull(),
+  lastViewedAt: timestamp("lastViewedAt"),
+  lastDownloadedAt: timestamp("lastDownloadedAt"),
+  lastPrintedAt: timestamp("lastPrintedAt"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Certificate = typeof certificates.$inferSelect;
+export type InsertCertificate = typeof certificates.$inferInsert;
+
+export const certificateTemplates = mysqlTable("certificate_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  achievementType: mysqlEnum("achievementType", [
+    "goal_completion",
+    "milestone_reached",
+    "sobriety_milestone",
+    "employment_secured",
+    "housing_secured",
+    "family_reunification",
+    "court_compliance",
+    "education_completed",
+    "recovery_program_completed",
+    "custom"
+  ]).notNull(),
+  templateHtml: text("templateHtml").notNull(), // HTML template with placeholders
+  backgroundColor: varchar("backgroundColor", { length: 50 }).default("#f5f5f5"),
+  borderColor: varchar("borderColor", { length: 50 }).default("#2c5aa0"),
+  textColor: varchar("textColor", { length: 50 }).default("#1a1a1a"),
+  accentColor: varchar("accentColor", { length: 50 }).default("#ffa500"),
+  logoUrl: varchar("logoUrl", { length: 500 }),
+  sealUrl: varchar("sealUrl", { length: 500 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CertificateTemplate = typeof certificateTemplates.$inferSelect;
+export type InsertCertificateTemplate = typeof certificateTemplates.$inferInsert;
+
+export const achievementBadges = mysqlTable("achievement_badges", {
+  id: int("id").autoincrement().primaryKey(),
+  clientId: int("clientId").notNull(),
+  badgeType: mysqlEnum("badgeType", [
+    "goal_master",
+    "milestone_champion",
+    "sobriety_warrior",
+    "employment_hero",
+    "housing_champion",
+    "family_reunifier",
+    "court_compliant",
+    "education_achiever",
+    "recovery_champion",
+    "community_contributor"
+  ]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  iconUrl: varchar("iconUrl", { length: 500 }).notNull(),
+  unlockedAt: timestamp("unlockedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AchievementBadge = typeof achievementBadges.$inferSelect;
+export type InsertAchievementBadge = typeof achievementBadges.$inferInsert;
