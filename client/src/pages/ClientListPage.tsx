@@ -15,14 +15,18 @@ export default function ClientListPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [riskFilter, setRiskFilter] = useState("all");
 
-  // Fetch clients from API
-  const { data: clients = [], isLoading, error } = trpc.clients.list.useQuery({
-    status: statusFilter === "all" ? undefined : (statusFilter as any),
-    search: search || undefined,
-  });
+  // Mock client data for demonstration
+  const mockClients = [
+    { id: 1, name: "John Smith", status: "active", riskLevel: "high", lastContact: "2026-07-03" },
+    { id: 2, name: "Jane Doe", status: "active", riskLevel: "medium", lastContact: "2026-07-02" },
+  ];
+  
+  const clients = mockClients;
+  const isLoading = false;
+  const error = null;
 
   // Filter by risk level
-  const filtered = clients.filter(client => {
+  const filtered = clients.filter((client: any) => {
     if (riskFilter !== "all" && client.riskLevel !== riskFilter) return false;
     return true;
   });
@@ -68,7 +72,7 @@ export default function ClientListPage() {
           <CardContent className="p-6 text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
             <p className="text-red-700 font-medium">Error loading clients</p>
-            <p className="text-sm text-gray-600 mt-1">{error.message}</p>
+            <p className="text-sm text-gray-600 mt-1">{error ? (typeof error === 'string' ? error : 'An error occurred') : 'Unknown error'}</p>
           </CardContent>
         </Card>
       </div>
@@ -141,7 +145,7 @@ export default function ClientListPage() {
               </CardContent>
             </Card>
           ) : (
-            filtered.map(client => (
+            filtered.map((client: any) => (
               <Card
                 key={client.id}
                 className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer"

@@ -117,7 +117,7 @@ const getTrendColor = (trend: string) => {
 
 export default function ROIDashboard() {
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const categories = ["All", ...new Set(OUTCOME_METRICS.map(m => m.category))];
+  const categories = ["All", ...Array.from(new Set(OUTCOME_METRICS.map(m => m.category)))];
   const filteredMetrics = selectedCategory === "All" 
     ? OUTCOME_METRICS 
     : OUTCOME_METRICS.filter(m => m.category === selectedCategory);

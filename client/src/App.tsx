@@ -136,8 +136,8 @@ function Router() {
       <Route path="/documents" component={Documents} />
       <Route path="/favorites" component={Favorites} />
       <Route path="/provider-dashboard" component={ProviderDashboard} />
-      <Route path="/referral-management" component={ReferralManagement} />
-      <Route path="/notes-management" component={NotesManagement} />
+      <Route path="/referral-management/:clientId" component={(props: any) => <ReferralManagement clientId={parseInt(props.params.clientId || '0')} />} />
+      <Route path="/notes-management/:clientId" component={(props: any) => <NotesManagement clientId={parseInt(props.params.clientId || '0')} />} />
       <Route path="/roi-dashboard" component={ROIDashboard} />
       <Route path="/permission-controls" component={PermissionControls} />
       <Route path="/multi-agency-hub" component={MultiAgencyHub} />

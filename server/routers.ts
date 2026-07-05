@@ -1690,7 +1690,7 @@ const timelineRouter = router({
       description: z.string().optional(),
       eventDate: z.date(),
       visibleToRoles: z.array(z.string()).optional(),
-      metadata: z.record(z.any()).optional(),
+      metadata: z.record(z.string(), z.any()).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
@@ -1773,9 +1773,9 @@ const multiAgencyOutcomesRouter = router({
       edUtilizationReduction: z.number().optional(),
       recidivismReduction: z.boolean().optional(),
       costSavings: z.number().optional(),
-      grantPerformanceMetrics: z.record(z.any()).optional(),
-      qualityMetrics: z.record(z.any()).optional(),
-      programOutcomes: z.record(z.any()).optional(),
+      grantPerformanceMetrics: z.record(z.string(), z.any()).optional(),
+      qualityMetrics: z.record(z.string(), z.any()).optional(),
+      programOutcomes: z.record(z.string(), z.any()).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();

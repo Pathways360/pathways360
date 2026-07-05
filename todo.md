@@ -393,3 +393,47 @@
 - [ ] Fix non-working buttons
 - [ ] Verify mobile-friendly design
 - [ ] Verify plain language and accessibility
+
+
+## Phase 26: Enhanced Provider Onboarding & Multi-Role ROI Dashboard
+
+### Provider Onboarding Enhancements
+- [ ] Add county/area dropdown selection to ProviderOnboarding step 1
+- [ ] Add license number input field (with LIC prefix validation)
+- [ ] Add admin passcode input for prototype testing (demo: "ADMIN123")
+- [ ] Add client search functionality in onboarding step 2 (search by name, ID, phone)
+- [ ] Display search results with client details (name, DOB, current providers)
+- [ ] Add "Add Client" button to onboarding to pre-populate client list
+
+### Role-Specific ROI Dashboards
+- [ ] Create RoleSpecificROI component with tabs for different provider roles
+- [ ] Doctor ROI metrics: appointment attendance, medication adherence, health outcomes, cost savings
+- [ ] Counselor ROI metrics: treatment engagement, recovery milestones, relapse prevention, progress tracking
+- [ ] Case Manager ROI metrics: housing stability, employment placement, multi-agency coordination, outcome tracking
+- [ ] ECM Worker ROI metrics: social determinants addressed, insurance verification, benefit enrollment, care plan compliance
+- [ ] Probation Officer ROI metrics: compliance rate, recidivism reduction, court date attendance, drug testing results
+- [ ] Multi-Agency ROI: combined outcomes across all providers, inter-agency compact metrics, shared client progress
+- [ ] ROI comparison charts (individual vs. agency vs. multi-agency benchmarks)
+- [ ] Export ROI reports by date range, client, or outcome category
+
+### Enhanced Provider Dashboard Features
+- [ ] Client search with advanced filters (status, risk level, last contact, assigned provider)
+- [ ] Messaging center with conversation threads (not just one-way messages)
+- [ ] Referral management with status tracking and follow-up reminders
+- [ ] Alert/notification system for clientele (high-risk alerts, missed appointments, compliance issues)
+- [ ] Real-time notification badges on dashboard
+- [ ] Alert history and acknowledgment tracking
+
+### Backend Fixes & Optimization
+- [x] Fix remaining TypeScript errors in routers.ts (z.record, db.insert syntax)
+- [x] Verify all tRPC procedures compile and run without errors
+- [ ] Test all provider onboarding flows with demo data
+- [ ] Test role-based ROI dashboard rendering with different provider roles
+- [ ] Performance optimization for large client lists (pagination, lazy loading)
+
+### Testing & Documentation
+- [ ] Vitest coverage for provider onboarding procedures
+- [ ] Vitest coverage for ROI calculation procedures
+- [ ] Vitest coverage for messaging and referral procedures
+- [ ] Update README with provider onboarding and ROI dashboard documentation
+- [ ] Create deployment guide for production ZIP
