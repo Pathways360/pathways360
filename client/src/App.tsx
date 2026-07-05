@@ -24,6 +24,8 @@ import Counselor from "./pages/Counselor";
 import Coach from "./pages/Coach";
 import CaseManagerPortal from "./pages/CaseManagerPortal";
 import ProviderPortal from "./pages/ProviderPortal";
+import ProviderOnboarding from "./pages/ProviderOnboarding";
+import ProviderDashboardFull from "./pages/ProviderDashboardFull";
 import CountyDirectory from "./pages/CountyDirectory";
 import DailyFeed from "./pages/DailyFeed";
 import CommunityEvents from "./pages/CommunityEvents";
@@ -140,7 +142,10 @@ function Router() {
       <Route path="/permission-controls" component={PermissionControls} />
       <Route path="/multi-agency-hub" component={MultiAgencyHub} />
       <Route path="/portal" component={CaseManagerPortal} />
-      <Route path="/provider-portal" component={ProviderPortal} />
+        <Route path="/provider-portal" component={ProviderPortal} />
+        <Route path="/provider-onboarding" component={ProviderOnboarding} />
+        <Route path="/provider-dashboard" component={ProviderDashboardFull} />
+        <Route path="/provider-search" component={ProviderDashboardFull} />
       <Route path="/probation-portal" component={ProbationPortal} />
       <Route path="/counselor-portal" component={CounselorPortal} />
       <Route path="/ecm-portal" component={ECMPortal} />

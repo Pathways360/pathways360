@@ -1095,3 +1095,72 @@ export const multiAgencyOutcomes = mysqlTable("multi_agency_outcomes", {
 
 export type MultiAgencyOutcome = typeof multiAgencyOutcomes.$inferSelect;
 export type InsertMultiAgencyOutcome = typeof multiAgencyOutcomes.$inferInsert;
+
+
+// ─── Provider Profiles (Role-Based Onboarding) ────────────────────────────────
+// Stores provider-specific information based on their role (Counselor, Case Manager, ECM Worker, etc.)
+export const providerProfiles = mysqlTable("provider_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  
+  // STEP 1: Provider Role & Organization
+  providerRole: mysqlEnum("providerRole", [
+    "counselor",
+    "case_manager",
+    "ecm_worker",
+    "probation_officer",
+    "insurance_provider",
+    "housing_provider",
+    "employment_specialist",
+    "peer_support_specialist",
+    "medical_provider",
+    "admin"
+  ]).notNull(),
+  organizationName: varchar("organizationName", { length: 255 }).notNull(),
+  organizationType: varchar("organizationType", { length: 100 }),
+  
+  // STEP 2: Credentials & Authority
+  licenseNumber: varchar("licenseNumber", { length: 100 }),
+  licenseType: varchar("licenseType", { length: 100 }),
+  licenseState: varchar("licenseState", { length: 50 }),
+  licenseExpiration: varchar("licenseExpiration", { length: 20 }),
+  yearsOfExperience: int("yearsOfExperience"),
+  certifications: text("certifications"), // JSON array
+  
+  // STEP 3: Services They Provide
+  servicesProvided: text("servicesProvided"), // JSON array
+  
+  // STEP 4: Client Specializations & Focus Areas
+  specializations: text("specializations"), // JSON array
+  targetPopulations: text("targetPopulations"), // JSON array
+  
+  // STEP 5: What They Want to Achieve for Clients
+  primaryClientOutcome: text("primaryClientOutcome"),
+  secondaryOutcomes: text("secondaryOutcomes"), // JSON array
+  measurableMetrics: text("measurableMetrics"), // JSON array
+  
+  // STEP 6: Capacity & Collaboration
+  maxClientsPerMonth: int("maxClientsPerMonth"),
+  averageClientsServed: int("averageClientsServed"),
+  acceptingNewClients: boolean("acceptingNewClients").default(true),
+  serviceDeliveryMethod: varchar("serviceDeliveryMethod", { length: 100 }),
+  collaboratingAgencies: text("collaboratingAgencies"), // JSON array
+  
+  // STEP 7: Data Sharing & Privacy
+  dataSharing: boolean("dataSharing").default(false),
+  consentRequired: boolean("consentRequired").default(true),
+  
+  // Contact Information
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  
+  // Onboarding Status
+  onboardingComplete: boolean("onboardingComplete").default(false),
+  onboardingStep: int("onboardingStep").default(0),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProviderProfile = typeof providerProfiles.$inferSelect;
+export type InsertProviderProfile = typeof providerProfiles.$inferInsert;
