@@ -288,10 +288,22 @@ export const notificationPreferences = mysqlTable("notification_preferences", {
   motivationalMessages: boolean("motivationalMessages").default(true).notNull(),
   // Safety
   crisisAlerts: boolean("crisisAlerts").default(true).notNull(),
-  // Timing
+  // Notification Types (Phase 34)
+  alertsEnabled: boolean("alertsEnabled").default(true).notNull(),
+  messagesEnabled: boolean("messagesEnabled").default(true).notNull(),
+  referralsEnabled: boolean("referralsEnabled").default(true).notNull(),
+  appointmentsEnabled: boolean("appointmentsEnabled").default(true).notNull(),
+  remindersEnabled: boolean("remindersEnabled").default(true).notNull(),
+  // Frequency (Phase 34)
+  frequency: mysqlEnum("frequency", ["immediate", "hourly_digest", "daily_digest"]).default("immediate").notNull(),
+  // Quiet Hours
+  quietHoursEnabled: boolean("quietHoursEnabled").default(false).notNull(),
   reminderLeadMinutes: int("reminderLeadMinutes").default(60).notNull(),
   quietHoursStart: varchar("quietHoursStart", { length: 5 }).default("22:00"),
   quietHoursEnd: varchar("quietHoursEnd", { length: 5 }).default("08:00"),
+  // Sound & Browser Notifications (Phase 34)
+  soundEnabled: boolean("soundEnabled").default(true).notNull(),
+  browserNotificationsEnabled: boolean("browserNotificationsEnabled").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1164,3 +1176,5 @@ export const providerProfiles = mysqlTable("provider_profiles", {
 
 export type ProviderProfile = typeof providerProfiles.$inferSelect;
 export type InsertProviderProfile = typeof providerProfiles.$inferInsert;
+
+

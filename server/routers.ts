@@ -826,6 +826,15 @@ const notificationsRouter = router({
       reminderLeadMinutes: z.number().optional(),
       quietHoursStart: z.string().optional(),
       quietHoursEnd: z.string().optional(),
+      alertsEnabled: z.boolean().optional(),
+      messagesEnabled: z.boolean().optional(),
+      referralsEnabled: z.boolean().optional(),
+      appointmentsEnabled: z.boolean().optional(),
+      remindersEnabled: z.boolean().optional(),
+      frequency: z.enum(['immediate', 'hourly_digest', 'daily_digest']).optional(),
+      quietHoursEnabled: z.boolean().optional(),
+      soundEnabled: z.boolean().optional(),
+      browserNotificationsEnabled: z.boolean().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();

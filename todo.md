@@ -454,3 +454,16 @@
 - [x] Test real-time message delivery (NotificationCenter displays messages with blue color)
 - [x] Test real-time referral delivery (NotificationCenter displays referrals with purple color)
 - [x] Verify multi-provider real-time sync (WebSocketManager supports multi-tab and multi-user)
+
+
+## Phase 34: Notification Preferences System
+- [x] Add notification_preferences table to database schema (added fields to existing table)
+- [x] Create notification preferences tRPC procedures (get, update) (upsert procedure updated with new fields)
+- [x] Create NotificationPreferences UI page with toggles for each notification type (3-tab UI: types, frequency, quiet hours)
+- [x] Add frequency selector (immediate, hourly digest, daily digest)
+- [x] Add quiet hours time picker (start/end time)
+- [ ] Integrate preferences into NotificationCenter filtering
+- [ ] Wire preferences into WebSocket server broadcast logic
+- [ ] Test notification filtering with preferences
+- [ ] Test quiet hours blocking
+- [ ] Test frequency aggregation (hourly/daily digests)
