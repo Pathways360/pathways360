@@ -1,7 +1,20 @@
-import twilio from "twilio";
+// Dynamically import Twilio to avoid startup errors with invalid credentials
+let twilio: any = null;
+
+function getTwilio() {
+  if (!twilio) {
+    try {
+      twilio = require('twilio');
+    } catch (error) {
+      console.warn('Failed to load Twilio module:', error);
+      return null;
+    }
+  }
+  return twilio;
+}
 
 // Lazy-load Twilio client to avoid startup errors
-let client: ReturnType<typeof twilio> | null = null;
+let client: any = null;
 let initialized = false;
 
 function initializeTwilio() {
@@ -17,8 +30,20 @@ function initializeTwilio() {
     return;
   }
 
+  // Validate that Account SID starts with AC (Twilio requirement)
+  if (!accountSid.startsWith('AC')) {
+    console.warn("Invalid Twilio Account SID. Must start with 'AC'. SMS notifications will be disabled.");
+    return;
+  }
+
   try {
-    client = twilio(accountSid, authToken);
+    const twilioModule = getTwilio();
+    if (!twilioModule) {
+      console.warn("Failed to load Twilio module.");
+      return;
+    }
+    client = twilioModule(accountSid, authToken);
+    console.log("Twilio initialized successfully");
   } catch (error) {
     console.warn("Failed to initialize Twilio:", error);
   }
