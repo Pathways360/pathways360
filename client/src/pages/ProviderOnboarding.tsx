@@ -81,7 +81,9 @@ export default function ProviderOnboarding() {
     providerRole: "",
     organizationName: "",
     organizationType: "",
+    serviceArea: "Butte",
     licenseNumber: "",
+    adminPasscode: "",
     licenseType: "",
     licenseState: "CA",
     licenseExpiration: "",
@@ -117,21 +119,22 @@ export default function ProviderOnboarding() {
 
   const verifyLicense = async () => {
     if (!form.licenseNumber) {
-      toast.error("Please enter a license number");
+      toast.error("Please enter a license number or admin passcode");
       return;
     }
     
     setVerifyingLicense(true);
-    // Simulate license verification - in production, call actual verification service
     setTimeout(() => {
-      // Demo: Licenses starting with "LIC" are verified, "PND" are pending
       if (form.licenseNumber.startsWith("LIC")) {
         setLicenseVerified(true);
         toast.success("License verified!");
       } else if (form.licenseNumber.startsWith("PND")) {
         toast.error("License verification pending. Admin approval required.");
+      } else if (form.licenseNumber === "ADMIN123") {
+        setLicenseVerified(true);
+        toast.success("Admin passcode accepted. Access granted for prototype testing.");
       } else {
-        toast.error("License not found in system. Please check and try again.");
+        toast.error("License/passcode not found. Try LIC prefix, PND prefix, or ADMIN123");
       }
       setVerifyingLicense(false);
     }, 1500);
@@ -212,6 +215,15 @@ export default function ProviderOnboarding() {
                 </Select>
               </div>
               <div>
+                <Label className="font-semibold">Service Area / County *</Label>
+                <Select value={form.serviceArea} onValueChange={v => set("serviceArea", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select your service area" /></SelectTrigger>
+                  <SelectContent>
+                    {["Butte", "Shasta", "Trinity", "Tehama", "Humboldt", "Siskiyou"].map(county => <SelectItem key={county} value={county}>{county} County</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label className="font-semibold">Organization Name *</Label>
                 <Input value={form.organizationName} onChange={e => set("organizationName", e.target.value)} placeholder="Your organization" />
               </div>
@@ -238,14 +250,15 @@ export default function ProviderOnboarding() {
               </div>
 
               <div>
-                <Label className="font-semibold">License Number</Label>
+                <Label className="font-semibold">License Number or Admin Passcode</Label>
                 <div className="flex gap-2">
-                  <Input value={form.licenseNumber} onChange={e => set("licenseNumber", e.target.value)} placeholder="e.g., LIC123456" />
+                  <Input value={form.licenseNumber} onChange={e => set("licenseNumber", e.target.value)} placeholder="e.g., LIC123456 or ADMIN123" />
                   <Button onClick={verifyLicense} disabled={verifyingLicense || !form.licenseNumber} variant="outline">
                     {verifyingLicense ? "Verifying..." : "Verify"}
                   </Button>
                 </div>
-                {licenseVerified && <p className="text-sm text-green-600 mt-2">✓ License verified</p>}
+                {licenseVerified && <p className="text-sm text-green-600 mt-2">✓ Verified (LIC=verified, PND=pending, ADMIN=admin override)</p>}
+                <p className="text-xs text-gray-500 mt-2">Demo: Use LIC prefix for verified, PND for pending, or ADMIN123 for admin testing</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

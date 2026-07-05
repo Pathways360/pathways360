@@ -398,23 +398,23 @@
 ## Phase 26: Enhanced Provider Onboarding & Multi-Role ROI Dashboard
 
 ### Provider Onboarding Enhancements
-- [ ] Add county/area dropdown selection to ProviderOnboarding step 1
-- [ ] Add license number input field (with LIC prefix validation)
-- [ ] Add admin passcode input for prototype testing (demo: "ADMIN123")
+- [x] Add county/area dropdown selection to ProviderOnboarding step 1
+- [x] Add license number input field (with LIC prefix validation)
+- [x] Add admin passcode input for prototype testing (demo: "ADMIN123")
 - [ ] Add client search functionality in onboarding step 2 (search by name, ID, phone)
 - [ ] Display search results with client details (name, DOB, current providers)
 - [ ] Add "Add Client" button to onboarding to pre-populate client list
 
 ### Role-Specific ROI Dashboards
-- [ ] Create RoleSpecificROI component with tabs for different provider roles
-- [ ] Doctor ROI metrics: appointment attendance, medication adherence, health outcomes, cost savings
-- [ ] Counselor ROI metrics: treatment engagement, recovery milestones, relapse prevention, progress tracking
-- [ ] Case Manager ROI metrics: housing stability, employment placement, multi-agency coordination, outcome tracking
-- [ ] ECM Worker ROI metrics: social determinants addressed, insurance verification, benefit enrollment, care plan compliance
-- [ ] Probation Officer ROI metrics: compliance rate, recidivism reduction, court date attendance, drug testing results
-- [ ] Multi-Agency ROI: combined outcomes across all providers, inter-agency compact metrics, shared client progress
-- [ ] ROI comparison charts (individual vs. agency vs. multi-agency benchmarks)
-- [ ] Export ROI reports by date range, client, or outcome category
+- [x] Create RoleSpecificROI component with tabs for different provider roles
+- [x] Doctor ROI metrics: appointment attendance, medication adherence, health outcomes, cost savings
+- [x] Counselor ROI metrics: treatment engagement, recovery milestones, relapse prevention, progress tracking
+- [x] Case Manager ROI metrics: housing stability, employment placement, multi-agency coordination, outcome tracking
+- [x] ECM Worker ROI metrics: social determinants addressed, insurance verification, benefit enrollment, care plan compliance
+- [x] Probation Officer ROI metrics: compliance rate, recidivism reduction, court date attendance, drug testing results
+- [x] Multi-Agency ROI: combined outcomes across all providers, inter-agency compact metrics, shared client progress
+- [x] ROI comparison charts (individual vs. agency vs. multi-agency benchmarks)
+- [x] Export ROI reports by date range, client, or outcome category
 
 ### Enhanced Provider Dashboard Features
 - [ ] Client search with advanced filters (status, risk level, last contact, assigned provider)
