@@ -1,4 +1,5 @@
 // Certificate PDF generation module
+import QRCode from 'qrcode';
 
 interface CertificateData {
   clientName: string;
@@ -12,8 +13,21 @@ interface CertificateData {
 }
 
 export async function generateCertificatePDF(data: CertificateData): Promise<string> {
-  // Generate HTML certificate
-  const html = generateCertificateHTML(data);
+  // Generate QR code for verification
+  const verificationUrl = `https://pathways360.com/verify-certificate/${data.certificateNumber}?code=${data.verificationCode}`;
+  const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+    errorCorrectionLevel: 'H',
+    type: 'image/png',
+    width: 300,
+    margin: 2,
+    color: {
+      dark: '#000000',
+      light: '#FFFFFF',
+    },
+  });
+
+  // Generate HTML certificate with QR code
+  const html = generateCertificateHTML(data, qrCodeDataUrl);
 
   // Convert HTML to PDF using WeasyPrint (via server-side rendering)
   const pdfBuffer = await htmlToPdf(html);
@@ -23,7 +37,7 @@ export async function generateCertificatePDF(data: CertificateData): Promise<str
   return `https://certificates.pathways360.com/${data.certificateNumber}.pdf`;
 }
 
-function generateCertificateHTML(data: CertificateData): string {
+function generateCertificateHTML(data: CertificateData, qrCodeDataUrl?: string): string {
   const achievementTitles: Record<string, string> = {
     goal_completion: "Goal Completion",
     milestone_reached: "Milestone Achievement",
@@ -208,6 +222,26 @@ function generateCertificateHTML(data: CertificateData): string {
       color: #999;
       margin-top: 5px;
     }
+    
+    .qr-code {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .qr-code img {
+      width: 120px;
+      height: 120px;
+      border: 2px solid ${borderColor};
+      padding: 8px;
+      background: white;
+    }
+    
+    .qr-label {
+      font-size: 10px;
+      color: #666;
+      margin-top: 5px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -244,6 +278,10 @@ function generateCertificateHTML(data: CertificateData): string {
       </div>
       
       <div style="text-align: center; flex: 1;">
+        ${qrCodeDataUrl ? `<div class="qr-code">
+          <img src="${qrCodeDataUrl}" alt="Verification QR Code" />
+          <div class="qr-label">Scan to Verify</div>
+        </div>` : ''}
         <div class="certificate-info">
           <div>Certificate #: ${data.certificateNumber}</div>
           <div>Issued: ${formattedDate}</div>

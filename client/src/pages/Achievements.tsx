@@ -8,12 +8,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Download, Printer, Eye, Trophy, Award, Zap } from "lucide-react";
+import { Download, Printer, Eye, Trophy, Award, Zap, Share2, Linkedin, Twitter, Mail, Copy, Check, QrCode } from "lucide-react";
 
 export default function Achievements() {
   const { user } = useAuth();
   const [selectedCertificate, setSelectedCertificate] = useState<any>(null);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   if (!user) {
     return (
@@ -49,353 +51,332 @@ export default function Achievements() {
     { enabled: !!user?.id }
   );
 
-  const generateCertificate = trpc.achievements.generateCertificate.useMutation();
-  const trackDownload = trpc.achievements.trackDownload.useMutation();
-  const trackPrint = trpc.achievements.trackPrint.useMutation();
-
-  const handleGenerateCertificate = async (achievementId: number) => {
-    try {
-      await generateCertificate.mutateAsync({
-        achievementId,
-        clientId: user?.id || 0,
-      });
-      // Refetch certificates
-    } catch (error) {
-      console.error("Failed to generate certificate:", error);
-    }
+  // Social sharing functions
+  const shareOnLinkedIn = (cert: any) => {
+    const url = `https://pathways360.com/verify-certificate/${cert.certificateNumber}`;
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+    window.open(linkedInUrl, "_blank", "width=600,height=400");
   };
 
-  const handleDownload = async (certificate: any) => {
-    try {
-      await trackDownload.mutateAsync({ certificateId: certificate.id });
-      // Open PDF in new window
-      window.open(certificate.pdfUrl, "_blank");
-    } catch (error) {
-      console.error("Failed to download certificate:", error);
-    }
+  const shareOnTwitter = (cert: any) => {
+    const text = `I just earned a Pathways 360 Achievement Certificate! 🏆 ${cert.title} (${cert.completionPercentage}%) Verify: https://pathways360.com/verify-certificate/${cert.certificateNumber}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(twitterUrl, "_blank", "width=600,height=400");
   };
 
-  const handlePrint = async (certificate: any) => {
-    try {
-      await trackPrint.mutateAsync({ certificateId: certificate.id });
-      // Print the certificate
-      window.print();
-    } catch (error) {
-      console.error("Failed to print certificate:", error);
-    }
+  const shareViaEmail = (cert: any) => {
+    const subject = `Pathways 360 Achievement Certificate - ${cert.title}`;
+    const body = `I wanted to share my achievement with you!\n\n${cert.title}\nCompletion Rate: ${cert.completionPercentage}%\n\nVerify this certificate: https://pathways360.com/verify-certificate/${cert.certificateNumber}\n\nThis achievement demonstrates my commitment to personal growth and life restoration.`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
-  const handleViewCertificate = (certificate: any) => {
-    setSelectedCertificate(certificate);
-    setShowCertificateModal(true);
+  const copyShareLink = (cert: any) => {
+    const link = `https://pathways360.com/verify-certificate/${cert.certificateNumber}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const getAchievementIcon = (type: string) => {
-    const icons: Record<string, React.ReactNode> = {
-      goal_completion: <Trophy className="w-5 h-5" />,
-      milestone_reached: <Award className="w-5 h-5" />,
-      sobriety_milestone: <Zap className="w-5 h-5" />,
-      employment_secured: <Award className="w-5 h-5" />,
-      housing_secured: <Trophy className="w-5 h-5" />,
-      family_reunification: <Trophy className="w-5 h-5" />,
-      court_compliance: <Award className="w-5 h-5" />,
-      education_completed: <Award className="w-5 h-5" />,
-      recovery_program_completed: <Zap className="w-5 h-5" />,
-      custom: <Trophy className="w-5 h-5" />,
-    };
-    return icons[type] || <Trophy className="w-5 h-5" />;
-  };
+  if (achievementsLoading || certificatesLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner />
+      </div>
+    );
+  }
 
-  const getCompletionColor = (percentage: number) => {
-    if (percentage >= 90) return "bg-green-100 text-green-800";
-    if (percentage >= 78) return "bg-blue-100 text-blue-800";
-    if (percentage >= 50) return "bg-yellow-100 text-yellow-800";
-    return "bg-gray-100 text-gray-800";
-  };
+  const totalAchievements = achievements?.length || 0;
+  const totalCertificates = certificates?.length || 0;
+  const totalBadges = badges?.length || 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Your Achievements</h1>
-        <p className="text-gray-600">
-          Celebrate your progress and earn certificates for reaching 78% goal completion
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Trophy className="w-8 h-8 text-amber-500" />
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Your Achievements</h1>
+          </div>
+          <p className="text-slate-600">Celebrate your progress and share your success with employers and your network</p>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Achievements</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{achievements?.length || 0}</div>
-            <p className="text-xs text-gray-600 mt-1">milestones reached</p>
-          </CardContent>
-        </Card>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card className="bg-white border-0 shadow-sm">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-teal-600 mb-2">{totalAchievements}</div>
+                <p className="text-slate-600">Total Achievements</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-0 shadow-sm">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-amber-600 mb-2">{totalCertificates}</div>
+                <p className="text-slate-600">Certificates Earned</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-0 shadow-sm">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600 mb-2">{totalBadges}</div>
+                <p className="text-slate-600">Badges Unlocked</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Certificates Earned</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{certificates?.length || 0}</div>
-            <p className="text-xs text-gray-600 mt-1">printable certificates</p>
-          </CardContent>
-        </Card>
+        {/* Tabs */}
+        <Tabs defaultValue="certificates" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="certificates">Certificates ({totalCertificates})</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements ({totalAchievements})</TabsTrigger>
+            <TabsTrigger value="badges">Badges ({totalBadges})</TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Badges Unlocked</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{badges?.length || 0}</div>
-            <p className="text-xs text-gray-600 mt-1">achievement badges</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="certificates" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="certificates">Certificates</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="badges">Badges</TabsTrigger>
-        </TabsList>
-
-        {/* Certificates Tab */}
-        <TabsContent value="certificates" className="space-y-4">
-          {certificatesLoading ? (
-            <div className="flex justify-center py-8">
-              <Spinner />
-            </div>
-          ) : certificates && certificates.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {certificates.map((cert: any) => (
-                <Card key={cert.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{cert.title}</CardTitle>
-                        <CardDescription>{cert.description}</CardDescription>
+          {/* Certificates Tab */}
+          <TabsContent value="certificates">
+            {!certificates || certificates.length === 0 ? (
+              <Alert>
+                <AlertDescription>
+                  No certificates yet. Complete 78% of your goals to earn your first certificate!
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {certificates.map((cert: any) => (
+                  <Card key={cert.id} className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-lg text-amber-900">{cert.title}</CardTitle>
+                          <CardDescription>Certificate #{cert.certificateNumber}</CardDescription>
+                        </div>
+                        <Award className="w-6 h-6 text-amber-600" />
                       </div>
-                      <Badge className={getCompletionColor(cert.completionPercentage)}>
-                        {cert.completionPercentage}%
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <p className="text-gray-600">Certificate #</p>
-                        <p className="font-mono text-sm">{cert.certificateNumber}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Issued Date</p>
-                        <p className="text-sm">{new Date(cert.issuedDate).toLocaleDateString()}</p>
-                      </div>
-                    </div>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm text-slate-600 mb-1">Completion Rate</p>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-slate-200 rounded-full h-2">
+                              <div
+                                className="bg-amber-500 h-2 rounded-full"
+                                style={{ width: `${cert.completionPercentage}%` }}
+                              />
+                            </div>
+                            <span className="font-bold text-amber-600">{cert.completionPercentage}%</span>
+                          </div>
+                        </div>
 
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleViewCertificate(cert)}
-                        className="flex-1"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDownload(cert)}
-                        className="flex-1"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handlePrint(cert)}
-                        className="flex-1"
-                      >
-                        <Printer className="w-4 h-4 mr-2" />
-                        Print
-                      </Button>
-                    </div>
+                        {cert.description && (
+                          <div>
+                            <p className="text-sm text-slate-600 mb-1">Description</p>
+                            <p className="text-slate-700">{cert.description}</p>
+                          </div>
+                        )}
 
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <p>Views: {cert.viewCount} | Downloads: {cert.downloadCount} | Prints: {cert.printCount}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Alert>
-              <AlertDescription>
-                No certificates yet. Reach 78% completion on your goals to earn certificates!
-              </AlertDescription>
-            </Alert>
-          )}
+                        <div>
+                          <p className="text-sm text-slate-600 mb-1">Issued Date</p>
+                          <p className="text-slate-700">{new Date(cert.issuedDate).toLocaleDateString()}</p>
+                        </div>
 
-          {/* Eligible for Certification */}
-          {eligibleAchievements && eligibleAchievements.length > 0 && (
-            <Card className="border-blue-200 bg-blue-50">
-              <CardHeader>
-                <CardTitle className="text-base">Ready for Certification</CardTitle>
-                <CardDescription>These achievements are eligible for certificates</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {eligibleAchievements.map((achievement: any) => (
-                  <div key={achievement.id} className="flex items-center justify-between p-3 bg-white rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">{achievement.title}</p>
-                      <p className="text-sm text-gray-600">{achievement.completionPercentage}% complete</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => handleGenerateCertificate(achievement.id)}
-                      disabled={generateCertificate.isPending}
-                    >
-                      {generateCertificate.isPending ? <Spinner /> : "Generate"}
-                    </Button>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+                        {/* Social Sharing Buttons */}
+                        <div className="pt-4 border-t">
+                          <p className="text-sm font-semibold text-slate-700 mb-3">Share Your Achievement</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() => shareOnLinkedIn(cert)}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-2"
+                            >
+                              <Linkedin className="w-4 h-4" />
+                              LinkedIn
+                            </Button>
+                            <Button
+                              onClick={() => shareOnTwitter(cert)}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-2"
+                            >
+                              <Twitter className="w-4 h-4" />
+                              Twitter
+                            </Button>
+                            <Button
+                              onClick={() => shareViaEmail(cert)}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-2"
+                            >
+                              <Mail className="w-4 h-4" />
+                              Email
+                            </Button>
+                            <Button
+                              onClick={() => copyShareLink(cert)}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-2"
+                            >
+                              {copiedLink ? (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  Copied!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-4 h-4" />
+                                  Copy Link
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
 
-        {/* Achievements Tab */}
-        <TabsContent value="achievements" className="space-y-4">
-          {achievementsLoading ? (
-            <div className="flex justify-center py-8">
-              <Spinner />
-            </div>
-          ) : achievements && achievements.length > 0 ? (
-            <div className="space-y-3">
-              {achievements.map((achievement: any) => (
-                <Card key={achievement.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="text-2xl">{getAchievementIcon(achievement.achievementType)}</div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{achievement.title}</h3>
-                          <p className="text-sm text-gray-600">{achievement.description}</p>
-                          <p className="text-xs text-gray-500 mt-2">
-                            Earned on {new Date(achievement.earnedAt).toLocaleDateString()}
-                          </p>
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-2 gap-2 pt-2">
+                          <Button
+                            onClick={() => {
+                              setSelectedCertificate(cert);
+                              setShowCertificateModal(true);
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex items-center gap-2">
+                            <Download className="w-4 h-4" />
+                            Download
+                          </Button>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge className={getCompletionColor(achievement.completionPercentage)}>
-                          {achievement.completionPercentage}%
-                        </Badge>
-                        {achievement.isEligibleForCertificate && (
-                          <Badge className="ml-2 bg-green-100 text-green-800">
-                            <Trophy className="w-3 h-3 mr-1" />
-                            Certified
-                          </Badge>
-                        )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Achievements Tab */}
+          <TabsContent value="achievements">
+            {!achievements || achievements.length === 0 ? (
+              <Alert>
+                <AlertDescription>No achievements yet. Keep working towards your goals!</AlertDescription>
+              </Alert>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {achievements.map((ach: any) => (
+                  <Card key={ach.id} className="bg-white border-0 shadow-sm">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{ach.title}</CardTitle>
+                          <CardDescription>{ach.category}</CardDescription>
+                        </div>
+                        <Trophy className="w-6 h-6 text-teal-600" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-slate-600 mb-4">{ach.description}</p>
+                      <Badge variant="outline">{ach.status}</Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Badges Tab */}
+          <TabsContent value="badges">
+            {!badges || badges.length === 0 ? (
+              <Alert>
+                <AlertDescription>No badges yet. Earn achievements to unlock badges!</AlertDescription>
+              </Alert>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {badges.map((badge: any) => (
+                  <Card key={badge.id} className="bg-white border-0 shadow-sm text-center">
+                    <CardContent className="pt-6">
+                      <div className="text-4xl mb-2">{badge.icon}</div>
+                      <p className="font-semibold text-slate-900">{badge.name}</p>
+                      <p className="text-xs text-slate-600 mt-2">{badge.description}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Certificate Modal */}
+        <Dialog open={showCertificateModal} onOpenChange={setShowCertificateModal}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Certificate Preview</DialogTitle>
+              <DialogDescription>Your achievement certificate with QR code for verification</DialogDescription>
+            </DialogHeader>
+            {selectedCertificate && (
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-8 rounded-lg border-2 border-amber-200">
+                <div className="text-center mb-6">
+                  <div className="text-5xl mb-2">🏆</div>
+                  <h2 className="text-2xl font-bold text-amber-900">Certificate of Achievement</h2>
+                  <p className="text-amber-700 italic">{selectedCertificate.title}</p>
+                </div>
+
+                <div className="text-center mb-6">
+                  <p className="text-slate-700 mb-2">This certificate is proudly presented to</p>
+                  <p className="text-xl font-bold text-amber-900 border-b-2 border-amber-300 pb-2">
+                    {user?.name || "Valued Client"}
+                  </p>
+                </div>
+
+                <div className="text-center mb-6">
+                  <p className="text-slate-700 mb-2">For successfully achieving</p>
+                  <p className="font-bold text-lg text-amber-900">{selectedCertificate.title}</p>
+                  <p className="text-slate-600">with a completion rate of</p>
+                  <p className="text-4xl font-bold text-amber-600 my-2">{selectedCertificate.completionPercentage}%</p>
+                </div>
+
+                {/* QR Code Placeholder */}
+                <div className="text-center mb-6">
+                  <div className="inline-block bg-white p-4 rounded border-2 border-amber-300">
+                    <div className="w-32 h-32 bg-slate-200 flex items-center justify-center rounded">
+                      <div className="text-center">
+                        <QrCode className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                        <p className="text-xs text-slate-500">QR Code</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Alert>
-              <AlertDescription>
-                No achievements yet. Start working on your goals to earn achievements!
-              </AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
-
-        {/* Badges Tab */}
-        <TabsContent value="badges" className="space-y-4">
-          {badges && badges.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {badges.map((badge: any) => (
-                <Card key={badge.id} className="text-center hover:shadow-lg transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="text-4xl mb-3">{badge.iconUrl || "🏆"}</div>
-                    <h3 className="font-semibold text-sm">{badge.title}</h3>
-                    <p className="text-xs text-gray-600 mt-2">{badge.description}</p>
-                    <p className="text-xs text-gray-500 mt-3">
-                      Unlocked {new Date(badge.unlockedAt).toLocaleDateString()}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Alert>
-              <AlertDescription>
-                No badges yet. Complete achievements to unlock badges!
-              </AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Certificate Preview Modal */}
-      <Dialog open={showCertificateModal} onOpenChange={setShowCertificateModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{selectedCertificate?.title}</DialogTitle>
-            <DialogDescription>
-              Certificate #{selectedCertificate?.certificateNumber}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedCertificate && (
-            <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 bg-gray-50 text-center">
-                <div className="text-6xl mb-4">🏆</div>
-                <h2 className="text-3xl font-bold mb-2">Certificate of Achievement</h2>
-                <p className="text-xl mb-6">{selectedCertificate.title}</p>
-                <p className="text-lg mb-4">
-                  Presented to <strong>{selectedCertificate.clientName}</strong>
-                </p>
-                <p className="text-base mb-6">{selectedCertificate.description}</p>
-                <div className="text-4xl font-bold text-blue-600 mb-6">
-                  {selectedCertificate.completionPercentage}%
+                    <p className="text-xs text-slate-600 mt-2">Scan to Verify</p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-4">
-                  Issued: {new Date(selectedCertificate.issuedDate).toLocaleDateString()}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Verification Code: {selectedCertificate.verificationCode}
-                </p>
-              </div>
 
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleDownload(selectedCertificate)}
-                  className="flex-1"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download PDF
-                </Button>
-                <Button
-                  onClick={() => handlePrint(selectedCertificate)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Printer className="w-4 h-4 mr-2" />
-                  Print
-                </Button>
+                <div className="text-center text-xs text-slate-600 border-t pt-4">
+                  <p>Certificate #{selectedCertificate.certificateNumber}</p>
+                  <p>Issued: {new Date(selectedCertificate.issuedDate).toLocaleDateString()}</p>
+                </div>
+
+                <div className="flex gap-2 mt-6">
+                  <Button className="flex-1" variant="outline">
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print
+                  </Button>
+                  <Button className="flex-1" variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
