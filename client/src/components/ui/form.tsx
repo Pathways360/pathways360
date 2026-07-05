@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
@@ -80,7 +80,7 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
     <FormItemContext.Provider value={{ id }}>
       <div
         data-slot="form-item"
-        className={cn("grid gap-2", className)}
+        className={cn("grid gap-3 mb-6", className)}
         {...props}
       />
     </FormItemContext.Provider>
@@ -97,7 +97,11 @@ function FormLabel({
     <Label
       data-slot="form-label"
       data-error={!!error}
-      className={cn("data-[error=true]:text-destructive", className)}
+      className={cn(
+        "text-base font-semibold text-foreground mb-2 block",
+        "data-[error=true]:text-destructive transition-colors",
+        className
+      )}
       htmlFor={formItemId}
       {...props}
     />
@@ -130,7 +134,10 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="form-description"
       id={formDescriptionId}
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn(
+        "text-body-small text-muted-foreground mt-1.5",
+        className
+      )}
       {...props}
     />
   );
@@ -148,9 +155,13 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn("text-destructive text-sm", className)}
+      className={cn(
+        "text-body-small text-destructive font-medium mt-1.5 flex items-center gap-1",
+        className
+      )}
       {...props}
     >
+      <span className="inline-block w-1.5 h-1.5 bg-destructive rounded-full" />
       {body}
     </p>
   );
